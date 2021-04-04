@@ -1,0 +1,108 @@
+if(logical_expression):
+    /*
+    body
+    */
+else if(logical_expression):
+    /*
+    body
+    */
+else:
+    /*
+    body
+    */
+
+and or not
+
+switch(var):
+    case x: #var==x
+        /*
+        body
+        /*
+    case y:
+        /*
+        body
+        */
+    default:
+        /*
+        body
+        */
+
+
+[\t] {return TAB;} 
+
+for(i::int = 0; logical_expression; i++):
+    /*
+    body
+    */
+
+i::int = 0
+for(i; logical_expression; i++):
+    /*
+    body
+    */
+
+do:
+    /*
+    body
+    */
+while(logical_expression)
+
+while(logical_expression):
+    /*
+    body
+    */
+
+print "Message $v $v", var1, var2
+print "Message", var1, var2
+print "Message"
+print var
+
+" " {return SPACE;}
+
+PRINT_STATEMENT: PRINT SPACE LHS
+LHS: VAR COMA LHS | MESSAGE COMA LHS | VAR | MESSAGE
+
+list[]::int = {1,2,3,4}
+
+for item in list:
+    item
+
+input("Enter a var:")
+int
+float 
+double
+String
+char
+
+int a,b,c,d;
+a,b,c,d::int
+
+int a=1,b=2,c=3,d=4;
+a,b,c,d::int = 1,2,3,4
+
+LOL: VAR COMA LOL | VAR
+DEC : LOL COL COL DATA_TYPE |  
+
+//
+/* */
+
+array[]::int = {}
+
+class A:
+class B,A: #B inherits from A
+
+int@func(a::int, b::int):
+
+FUNC_CALL : DATA_TYPE AT FUNC_NAME LB PARA RB COL
+PARA: VAR COL COL DATA_TYPE COMA PARA | VAR COL COL DATA_TYPE
+ 
+func(10,20)
+
+
+num::int = 4
+str::String = "string"
+str = "string"
+
+Input and Output:
+scan
+print

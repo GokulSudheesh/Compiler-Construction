@@ -1,0 +1,1888 @@
+Terminals unused in grammar
+
+    DOTH
+    DOTC
+    UPLUS
+    UMINUS
+    EXP
+    MUL
+
+
+State 91 conflicts: 13 shift/reduce
+State 107 conflicts: 13 shift/reduce
+State 108 conflicts: 13 shift/reduce
+State 109 conflicts: 13 shift/reduce
+
+
+Grammar
+
+    0 $accept: prm $end
+
+    1 prm: HEADERS MAIN_TYPE MAIN LB RB BLOCK
+
+    2 MAIN_TYPE: INT
+
+    3 HEADERS: HEADER HEADERS
+    4        | HEADER
+
+    5 HEADER: HASH INCLUDE LT HEADER_FILE GT
+    6       | HASH INCLUDE DOUBLEQ HEADER2 HEADER_FILE DOUBLEQ
+
+    7 HEADER2: HEADER2 VAR DIV
+    8        | DIV
+    9        | %empty
+
+   10 BLOCK: LCB BODY RCB
+
+   11 BODY: STATEMENTS
+
+   12 STATEMENTS: STATEMENT STATEMENTS
+   13           | STATEMENT
+
+   14 STATEMENT: BLOCK
+   15          | IF LB EXPRESSION RB BLOCK ELSE BLOCK
+   16          | IF LB EXPRESSION RB BLOCK
+   17          | WHILE LB EXPRESSION RB BLOCK
+   18          | DO LCB BLOCK RCB WHILE LB EXPRESSION RB SC
+   19          | LB EXPRESSION RB QUESM BLOCK COLON BLOCK SC
+   20          | FOR LB ASSIGNMENT SC EXPRESSION SC ASSIGNMENT RB BLOCK
+   21          | ASSIGNMENT SC
+   22          | DECLARATION_STATEMENT SC
+   23          | COMMENT
+   24          | SC
+
+   25 ASSIGNMENT: VAR EQ EXPRESSION
+   26           | VAR DIMENSION_SEQUENCE EQ EXPRESSION
+   27           | STAR_SEQUENCE EXPRESSION EQ EXPRESSION
+
+   28 EXPRESSION: AMPERSAND EXPRESSION
+   29           | NOT EXPRESSION
+   30           | EXPRESSION BINOP EXPRESSION
+   31           | EXPRESSION RELOP EXPRESSION
+   32           | EXPRESSION LOGOP EXPRESSION
+   33           | STAR_SEQUENCE EXPRESSION
+   34           | VAR DIMENSION_SEQUENCE
+   35           | VAR
+   36           | LB EXPRESSION RB
+   37           | NUMINT
+
+   38 DIMENSION_SEQUENCE: LSB NUMINT RSB DIMENSION_SEQUENCE
+   39                   | LSB NUMINT RSB
+
+   40 STAR_SEQUENCE: STAR STAR_SEQUENCE
+   41              | STAR
+
+   42 BINOP: PLUS
+   43      | MINUS
+   44      | STAR
+   45      | DIV
+   46      | MOD
+
+   47 RELOP: EQCOMPARE
+   48      | NEQCOMPARE
+   49      | LTE
+   50      | LT
+   51      | GTE
+   52      | GT
+
+   53 LOGOP: AND
+   54      | OR
+
+   55 DECLARATION_STATEMENT: DATA_TYPE VAR_LIST
+
+   56 VAR_LIST: VAR DECLARATION_SEQUENCE COMMA VAR_LIST
+   57         | VAR COMMA VAR_LIST
+   58         | POINTER_SEQUENCE VAR COMMA VAR_LIST
+   59         | VAR DECLARATION_SEQUENCE
+   60         | POINTER_SEQUENCE VAR
+   61         | VAR
+
+   62 DECLARATION_SEQUENCE: LSB NUMINT RSB DECLARATION_SEQUENCE
+   63                     | LSB NUMINT RSB
+
+   64 POINTER_SEQUENCE: STAR POINTER_SEQUENCE
+   65                 | STAR
+
+   66 DATA_TYPE: INT
+   67          | CHAR
+   68          | FLOAT
+   69          | DOUBLE
+
+
+Terminals, with rules where they appear
+
+    $end (0) 0
+    error (256)
+    INCLUDE (258) 5 6
+    HEADER_FILE (259) 5 6
+    MAIN (260) 1
+    DOTH (261)
+    DOTC (262)
+    HASH (263) 5 6
+    DOUBLEQ (264) 6
+    LB (265) 1 15 16 17 18 19 20 36
+    RB (266) 1 15 16 17 18 19 20 36
+    LCB (267) 10 18
+    RCB (268) 10 18
+    LSB (269) 38 39 62 63
+    RSB (270) 38 39 62 63
+    COMMA (271) 56 57 58
+    SC (272) 18 19 20 21 22 24
+    UPLUS (273)
+    UMINUS (274)
+    EXP (275)
+    QUESM (276) 19
+    COLON (277) 19
+    STAR (278) 40 41 44 64 65
+    AMPERSAND (279) 28
+    PLUS (280) 42
+    MINUS (281) 43
+    MOD (282) 46
+    MUL (283)
+    DIV (284) 7 8 45
+    EQCOMPARE (285) 47
+    NEQCOMPARE (286) 48
+    EQ (287) 25 26 27
+    GTE (288) 51
+    LTE (289) 49
+    GT (290) 5 52
+    LT (291) 5 50
+    NOT (292) 29
+    AND (293) 53
+    OR (294) 54
+    IF (295) 15 16
+    ELSE (296) 15
+    FOR (297) 20
+    DO (298) 18
+    WHILE (299) 17 18
+    VAR <var_name> (300) 7 25 26 34 35 56 57 58 59 60 61
+    NUMINT <num_int> (301) 37 38 39 62 63
+    COMMENT (302) 23
+    INT <data_type> (303) 2 66
+    CHAR <data_type> (304) 67
+    FLOAT <data_type> (305) 68
+    DOUBLE <data_type> (306) 69
+
+
+Nonterminals, with rules where they appear
+
+    $accept (52)
+        on left: 0
+    prm (53)
+        on left: 1
+        on right: 0
+    MAIN_TYPE (54)
+        on left: 2
+        on right: 1
+    HEADERS (55)
+        on left: 3 4
+        on right: 1 3
+    HEADER (56)
+        on left: 5 6
+        on right: 3 4
+    HEADER2 (57)
+        on left: 7 8 9
+        on right: 6 7
+    BLOCK (58)
+        on left: 10
+        on right: 1 14 15 16 17 18 19 20
+    BODY (59)
+        on left: 11
+        on right: 10
+    STATEMENTS (60)
+        on left: 12 13
+        on right: 11 12
+    STATEMENT (61)
+        on left: 14 15 16 17 18 19 20 21 22 23 24
+        on right: 12 13
+    ASSIGNMENT (62)
+        on left: 25 26 27
+        on right: 20 21
+    EXPRESSION (63)
+        on left: 28 29 30 31 32 33 34 35 36 37
+        on right: 15 16 17 18 19 20 25 26 27 28 29 30 31 32 33 36
+    DIMENSION_SEQUENCE (64)
+        on left: 38 39
+        on right: 26 34 38
+    STAR_SEQUENCE (65)
+        on left: 40 41
+        on right: 27 33 40
+    BINOP (66)
+        on left: 42 43 44 45 46
+        on right: 30
+    RELOP (67)
+        on left: 47 48 49 50 51 52
+        on right: 31
+    LOGOP (68)
+        on left: 53 54
+        on right: 32
+    DECLARATION_STATEMENT (69)
+        on left: 55
+        on right: 22
+    VAR_LIST (70)
+        on left: 56 57 58 59 60 61
+        on right: 55 56 57 58
+    DECLARATION_SEQUENCE (71)
+        on left: 62 63
+        on right: 56 59 62
+    POINTER_SEQUENCE (72)
+        on left: 64 65
+        on right: 58 60 64
+    DATA_TYPE <data_type> (73)
+        on left: 66 67 68 69
+        on right: 55
+
+
+State 0
+
+    0 $accept: . prm $end
+
+    HASH  shift, and go to state 1
+
+    prm      go to state 2
+    HEADERS  go to state 3
+    HEADER   go to state 4
+
+
+State 1
+
+    5 HEADER: HASH . INCLUDE LT HEADER_FILE GT
+    6       | HASH . INCLUDE DOUBLEQ HEADER2 HEADER_FILE DOUBLEQ
+
+    INCLUDE  shift, and go to state 5
+
+
+State 2
+
+    0 $accept: prm . $end
+
+    $end  shift, and go to state 6
+
+
+State 3
+
+    1 prm: HEADERS . MAIN_TYPE MAIN LB RB BLOCK
+
+    INT  shift, and go to state 7
+
+    MAIN_TYPE  go to state 8
+
+
+State 4
+
+    3 HEADERS: HEADER . HEADERS
+    4        | HEADER .
+
+    HASH  shift, and go to state 1
+
+    $default  reduce using rule 4 (HEADERS)
+
+    HEADERS  go to state 9
+    HEADER   go to state 4
+
+
+State 5
+
+    5 HEADER: HASH INCLUDE . LT HEADER_FILE GT
+    6       | HASH INCLUDE . DOUBLEQ HEADER2 HEADER_FILE DOUBLEQ
+
+    DOUBLEQ  shift, and go to state 10
+    LT       shift, and go to state 11
+
+
+State 6
+
+    0 $accept: prm $end .
+
+    $default  accept
+
+
+State 7
+
+    2 MAIN_TYPE: INT .
+
+    $default  reduce using rule 2 (MAIN_TYPE)
+
+
+State 8
+
+    1 prm: HEADERS MAIN_TYPE . MAIN LB RB BLOCK
+
+    MAIN  shift, and go to state 12
+
+
+State 9
+
+    3 HEADERS: HEADER HEADERS .
+
+    $default  reduce using rule 3 (HEADERS)
+
+
+State 10
+
+    6 HEADER: HASH INCLUDE DOUBLEQ . HEADER2 HEADER_FILE DOUBLEQ
+
+    DIV  shift, and go to state 13
+
+    $default  reduce using rule 9 (HEADER2)
+
+    HEADER2  go to state 14
+
+
+State 11
+
+    5 HEADER: HASH INCLUDE LT . HEADER_FILE GT
+
+    HEADER_FILE  shift, and go to state 15
+
+
+State 12
+
+    1 prm: HEADERS MAIN_TYPE MAIN . LB RB BLOCK
+
+    LB  shift, and go to state 16
+
+
+State 13
+
+    8 HEADER2: DIV .
+
+    $default  reduce using rule 8 (HEADER2)
+
+
+State 14
+
+    6 HEADER: HASH INCLUDE DOUBLEQ HEADER2 . HEADER_FILE DOUBLEQ
+    7 HEADER2: HEADER2 . VAR DIV
+
+    HEADER_FILE  shift, and go to state 17
+    VAR          shift, and go to state 18
+
+
+State 15
+
+    5 HEADER: HASH INCLUDE LT HEADER_FILE . GT
+
+    GT  shift, and go to state 19
+
+
+State 16
+
+    1 prm: HEADERS MAIN_TYPE MAIN LB . RB BLOCK
+
+    RB  shift, and go to state 20
+
+
+State 17
+
+    6 HEADER: HASH INCLUDE DOUBLEQ HEADER2 HEADER_FILE . DOUBLEQ
+
+    DOUBLEQ  shift, and go to state 21
+
+
+State 18
+
+    7 HEADER2: HEADER2 VAR . DIV
+
+    DIV  shift, and go to state 22
+
+
+State 19
+
+    5 HEADER: HASH INCLUDE LT HEADER_FILE GT .
+
+    $default  reduce using rule 5 (HEADER)
+
+
+State 20
+
+    1 prm: HEADERS MAIN_TYPE MAIN LB RB . BLOCK
+
+    LCB  shift, and go to state 23
+
+    BLOCK  go to state 24
+
+
+State 21
+
+    6 HEADER: HASH INCLUDE DOUBLEQ HEADER2 HEADER_FILE DOUBLEQ .
+
+    $default  reduce using rule 6 (HEADER)
+
+
+State 22
+
+    7 HEADER2: HEADER2 VAR DIV .
+
+    $default  reduce using rule 7 (HEADER2)
+
+
+State 23
+
+   10 BLOCK: LCB . BODY RCB
+
+    LB       shift, and go to state 25
+    LCB      shift, and go to state 23
+    SC       shift, and go to state 26
+    STAR     shift, and go to state 27
+    IF       shift, and go to state 28
+    FOR      shift, and go to state 29
+    DO       shift, and go to state 30
+    WHILE    shift, and go to state 31
+    VAR      shift, and go to state 32
+    COMMENT  shift, and go to state 33
+    INT      shift, and go to state 34
+    CHAR     shift, and go to state 35
+    FLOAT    shift, and go to state 36
+    DOUBLE   shift, and go to state 37
+
+    BLOCK                  go to state 38
+    BODY                   go to state 39
+    STATEMENTS             go to state 40
+    STATEMENT              go to state 41
+    ASSIGNMENT             go to state 42
+    STAR_SEQUENCE          go to state 43
+    DECLARATION_STATEMENT  go to state 44
+    DATA_TYPE              go to state 45
+
+
+State 24
+
+    1 prm: HEADERS MAIN_TYPE MAIN LB RB BLOCK .
+
+    $default  reduce using rule 1 (prm)
+
+
+State 25
+
+   19 STATEMENT: LB . EXPRESSION RB QUESM BLOCK COLON BLOCK SC
+
+    LB         shift, and go to state 46
+    STAR       shift, and go to state 27
+    AMPERSAND  shift, and go to state 47
+    NOT        shift, and go to state 48
+    VAR        shift, and go to state 49
+    NUMINT     shift, and go to state 50
+
+    EXPRESSION     go to state 51
+    STAR_SEQUENCE  go to state 52
+
+
+State 26
+
+   24 STATEMENT: SC .
+
+    $default  reduce using rule 24 (STATEMENT)
+
+
+State 27
+
+   40 STAR_SEQUENCE: STAR . STAR_SEQUENCE
+   41              | STAR .
+
+    STAR  shift, and go to state 27
+
+    $default  reduce using rule 41 (STAR_SEQUENCE)
+
+    STAR_SEQUENCE  go to state 53
+
+
+State 28
+
+   15 STATEMENT: IF . LB EXPRESSION RB BLOCK ELSE BLOCK
+   16          | IF . LB EXPRESSION RB BLOCK
+
+    LB  shift, and go to state 54
+
+
+State 29
+
+   20 STATEMENT: FOR . LB ASSIGNMENT SC EXPRESSION SC ASSIGNMENT RB BLOCK
+
+    LB  shift, and go to state 55
+
+
+State 30
+
+   18 STATEMENT: DO . LCB BLOCK RCB WHILE LB EXPRESSION RB SC
+
+    LCB  shift, and go to state 56
+
+
+State 31
+
+   17 STATEMENT: WHILE . LB EXPRESSION RB BLOCK
+
+    LB  shift, and go to state 57
+
+
+State 32
+
+   25 ASSIGNMENT: VAR . EQ EXPRESSION
+   26           | VAR . DIMENSION_SEQUENCE EQ EXPRESSION
+
+    LSB  shift, and go to state 58
+    EQ   shift, and go to state 59
+
+    DIMENSION_SEQUENCE  go to state 60
+
+
+State 33
+
+   23 STATEMENT: COMMENT .
+
+    $default  reduce using rule 23 (STATEMENT)
+
+
+State 34
+
+   66 DATA_TYPE: INT .
+
+    $default  reduce using rule 66 (DATA_TYPE)
+
+
+State 35
+
+   67 DATA_TYPE: CHAR .
+
+    $default  reduce using rule 67 (DATA_TYPE)
+
+
+State 36
+
+   68 DATA_TYPE: FLOAT .
+
+    $default  reduce using rule 68 (DATA_TYPE)
+
+
+State 37
+
+   69 DATA_TYPE: DOUBLE .
+
+    $default  reduce using rule 69 (DATA_TYPE)
+
+
+State 38
+
+   14 STATEMENT: BLOCK .
+
+    $default  reduce using rule 14 (STATEMENT)
+
+
+State 39
+
+   10 BLOCK: LCB BODY . RCB
+
+    RCB  shift, and go to state 61
+
+
+State 40
+
+   11 BODY: STATEMENTS .
+
+    $default  reduce using rule 11 (BODY)
+
+
+State 41
+
+   12 STATEMENTS: STATEMENT . STATEMENTS
+   13           | STATEMENT .
+
+    LB       shift, and go to state 25
+    LCB      shift, and go to state 23
+    SC       shift, and go to state 26
+    STAR     shift, and go to state 27
+    IF       shift, and go to state 28
+    FOR      shift, and go to state 29
+    DO       shift, and go to state 30
+    WHILE    shift, and go to state 31
+    VAR      shift, and go to state 32
+    COMMENT  shift, and go to state 33
+    INT      shift, and go to state 34
+    CHAR     shift, and go to state 35
+    FLOAT    shift, and go to state 36
+    DOUBLE   shift, and go to state 37
+
+    $default  reduce using rule 13 (STATEMENTS)
+
+    BLOCK                  go to state 38
+    STATEMENTS             go to state 62
+    STATEMENT              go to state 41
+    ASSIGNMENT             go to state 42
+    STAR_SEQUENCE          go to state 43
+    DECLARATION_STATEMENT  go to state 44
+    DATA_TYPE              go to state 45
+
+
+State 42
+
+   21 STATEMENT: ASSIGNMENT . SC
+
+    SC  shift, and go to state 63
+
+
+State 43
+
+   27 ASSIGNMENT: STAR_SEQUENCE . EXPRESSION EQ EXPRESSION
+
+    LB         shift, and go to state 46
+    STAR       shift, and go to state 27
+    AMPERSAND  shift, and go to state 47
+    NOT        shift, and go to state 48
+    VAR        shift, and go to state 49
+    NUMINT     shift, and go to state 50
+
+    EXPRESSION     go to state 64
+    STAR_SEQUENCE  go to state 52
+
+
+State 44
+
+   22 STATEMENT: DECLARATION_STATEMENT . SC
+
+    SC  shift, and go to state 65
+
+
+State 45
+
+   55 DECLARATION_STATEMENT: DATA_TYPE . VAR_LIST
+
+    STAR  shift, and go to state 66
+    VAR   shift, and go to state 67
+
+    VAR_LIST          go to state 68
+    POINTER_SEQUENCE  go to state 69
+
+
+State 46
+
+   36 EXPRESSION: LB . EXPRESSION RB
+
+    LB         shift, and go to state 46
+    STAR       shift, and go to state 27
+    AMPERSAND  shift, and go to state 47
+    NOT        shift, and go to state 48
+    VAR        shift, and go to state 49
+    NUMINT     shift, and go to state 50
+
+    EXPRESSION     go to state 70
+    STAR_SEQUENCE  go to state 52
+
+
+State 47
+
+   28 EXPRESSION: AMPERSAND . EXPRESSION
+
+    LB         shift, and go to state 46
+    STAR       shift, and go to state 27
+    AMPERSAND  shift, and go to state 47
+    NOT        shift, and go to state 48
+    VAR        shift, and go to state 49
+    NUMINT     shift, and go to state 50
+
+    EXPRESSION     go to state 71
+    STAR_SEQUENCE  go to state 52
+
+
+State 48
+
+   29 EXPRESSION: NOT . EXPRESSION
+
+    LB         shift, and go to state 46
+    STAR       shift, and go to state 27
+    AMPERSAND  shift, and go to state 47
+    NOT        shift, and go to state 48
+    VAR        shift, and go to state 49
+    NUMINT     shift, and go to state 50
+
+    EXPRESSION     go to state 72
+    STAR_SEQUENCE  go to state 52
+
+
+State 49
+
+   34 EXPRESSION: VAR . DIMENSION_SEQUENCE
+   35           | VAR .
+
+    LSB  shift, and go to state 58
+
+    $default  reduce using rule 35 (EXPRESSION)
+
+    DIMENSION_SEQUENCE  go to state 73
+
+
+State 50
+
+   37 EXPRESSION: NUMINT .
+
+    $default  reduce using rule 37 (EXPRESSION)
+
+
+State 51
+
+   19 STATEMENT: LB EXPRESSION . RB QUESM BLOCK COLON BLOCK SC
+   30 EXPRESSION: EXPRESSION . BINOP EXPRESSION
+   31           | EXPRESSION . RELOP EXPRESSION
+   32           | EXPRESSION . LOGOP EXPRESSION
+
+    RB          shift, and go to state 74
+    STAR        shift, and go to state 75
+    PLUS        shift, and go to state 76
+    MINUS       shift, and go to state 77
+    MOD         shift, and go to state 78
+    DIV         shift, and go to state 79
+    EQCOMPARE   shift, and go to state 80
+    NEQCOMPARE  shift, and go to state 81
+    GTE         shift, and go to state 82
+    LTE         shift, and go to state 83
+    GT          shift, and go to state 84
+    LT          shift, and go to state 85
+    AND         shift, and go to state 86
+    OR          shift, and go to state 87
+
+    BINOP  go to state 88
+    RELOP  go to state 89
+    LOGOP  go to state 90
+
+
+State 52
+
+   33 EXPRESSION: STAR_SEQUENCE . EXPRESSION
+
+    LB         shift, and go to state 46
+    STAR       shift, and go to state 27
+    AMPERSAND  shift, and go to state 47
+    NOT        shift, and go to state 48
+    VAR        shift, and go to state 49
+    NUMINT     shift, and go to state 50
+
+    EXPRESSION     go to state 91
+    STAR_SEQUENCE  go to state 52
+
+
+State 53
+
+   40 STAR_SEQUENCE: STAR STAR_SEQUENCE .
+
+    $default  reduce using rule 40 (STAR_SEQUENCE)
+
+
+State 54
+
+   15 STATEMENT: IF LB . EXPRESSION RB BLOCK ELSE BLOCK
+   16          | IF LB . EXPRESSION RB BLOCK
+
+    LB         shift, and go to state 46
+    STAR       shift, and go to state 27
+    AMPERSAND  shift, and go to state 47
+    NOT        shift, and go to state 48
+    VAR        shift, and go to state 49
+    NUMINT     shift, and go to state 50
+
+    EXPRESSION     go to state 92
+    STAR_SEQUENCE  go to state 52
+
+
+State 55
+
+   20 STATEMENT: FOR LB . ASSIGNMENT SC EXPRESSION SC ASSIGNMENT RB BLOCK
+
+    STAR  shift, and go to state 27
+    VAR   shift, and go to state 32
+
+    ASSIGNMENT     go to state 93
+    STAR_SEQUENCE  go to state 43
+
+
+State 56
+
+   18 STATEMENT: DO LCB . BLOCK RCB WHILE LB EXPRESSION RB SC
+
+    LCB  shift, and go to state 23
+
+    BLOCK  go to state 94
+
+
+State 57
+
+   17 STATEMENT: WHILE LB . EXPRESSION RB BLOCK
+
+    LB         shift, and go to state 46
+    STAR       shift, and go to state 27
+    AMPERSAND  shift, and go to state 47
+    NOT        shift, and go to state 48
+    VAR        shift, and go to state 49
+    NUMINT     shift, and go to state 50
+
+    EXPRESSION     go to state 95
+    STAR_SEQUENCE  go to state 52
+
+
+State 58
+
+   38 DIMENSION_SEQUENCE: LSB . NUMINT RSB DIMENSION_SEQUENCE
+   39                   | LSB . NUMINT RSB
+
+    NUMINT  shift, and go to state 96
+
+
+State 59
+
+   25 ASSIGNMENT: VAR EQ . EXPRESSION
+
+    LB         shift, and go to state 46
+    STAR       shift, and go to state 27
+    AMPERSAND  shift, and go to state 47
+    NOT        shift, and go to state 48
+    VAR        shift, and go to state 49
+    NUMINT     shift, and go to state 50
+
+    EXPRESSION     go to state 97
+    STAR_SEQUENCE  go to state 52
+
+
+State 60
+
+   26 ASSIGNMENT: VAR DIMENSION_SEQUENCE . EQ EXPRESSION
+
+    EQ  shift, and go to state 98
+
+
+State 61
+
+   10 BLOCK: LCB BODY RCB .
+
+    $default  reduce using rule 10 (BLOCK)
+
+
+State 62
+
+   12 STATEMENTS: STATEMENT STATEMENTS .
+
+    $default  reduce using rule 12 (STATEMENTS)
+
+
+State 63
+
+   21 STATEMENT: ASSIGNMENT SC .
+
+    $default  reduce using rule 21 (STATEMENT)
+
+
+State 64
+
+   27 ASSIGNMENT: STAR_SEQUENCE EXPRESSION . EQ EXPRESSION
+   30 EXPRESSION: EXPRESSION . BINOP EXPRESSION
+   31           | EXPRESSION . RELOP EXPRESSION
+   32           | EXPRESSION . LOGOP EXPRESSION
+
+    STAR        shift, and go to state 75
+    PLUS        shift, and go to state 76
+    MINUS       shift, and go to state 77
+    MOD         shift, and go to state 78
+    DIV         shift, and go to state 79
+    EQCOMPARE   shift, and go to state 80
+    NEQCOMPARE  shift, and go to state 81
+    EQ          shift, and go to state 99
+    GTE         shift, and go to state 82
+    LTE         shift, and go to state 83
+    GT          shift, and go to state 84
+    LT          shift, and go to state 85
+    AND         shift, and go to state 86
+    OR          shift, and go to state 87
+
+    BINOP  go to state 88
+    RELOP  go to state 89
+    LOGOP  go to state 90
+
+
+State 65
+
+   22 STATEMENT: DECLARATION_STATEMENT SC .
+
+    $default  reduce using rule 22 (STATEMENT)
+
+
+State 66
+
+   64 POINTER_SEQUENCE: STAR . POINTER_SEQUENCE
+   65                 | STAR .
+
+    STAR  shift, and go to state 66
+
+    $default  reduce using rule 65 (POINTER_SEQUENCE)
+
+    POINTER_SEQUENCE  go to state 100
+
+
+State 67
+
+   56 VAR_LIST: VAR . DECLARATION_SEQUENCE COMMA VAR_LIST
+   57         | VAR . COMMA VAR_LIST
+   59         | VAR . DECLARATION_SEQUENCE
+   61         | VAR .
+
+    LSB    shift, and go to state 101
+    COMMA  shift, and go to state 102
+
+    $default  reduce using rule 61 (VAR_LIST)
+
+    DECLARATION_SEQUENCE  go to state 103
+
+
+State 68
+
+   55 DECLARATION_STATEMENT: DATA_TYPE VAR_LIST .
+
+    $default  reduce using rule 55 (DECLARATION_STATEMENT)
+
+
+State 69
+
+   58 VAR_LIST: POINTER_SEQUENCE . VAR COMMA VAR_LIST
+   60         | POINTER_SEQUENCE . VAR
+
+    VAR  shift, and go to state 104
+
+
+State 70
+
+   30 EXPRESSION: EXPRESSION . BINOP EXPRESSION
+   31           | EXPRESSION . RELOP EXPRESSION
+   32           | EXPRESSION . LOGOP EXPRESSION
+   36           | LB EXPRESSION . RB
+
+    RB          shift, and go to state 105
+    STAR        shift, and go to state 75
+    PLUS        shift, and go to state 76
+    MINUS       shift, and go to state 77
+    MOD         shift, and go to state 78
+    DIV         shift, and go to state 79
+    EQCOMPARE   shift, and go to state 80
+    NEQCOMPARE  shift, and go to state 81
+    GTE         shift, and go to state 82
+    LTE         shift, and go to state 83
+    GT          shift, and go to state 84
+    LT          shift, and go to state 85
+    AND         shift, and go to state 86
+    OR          shift, and go to state 87
+
+    BINOP  go to state 88
+    RELOP  go to state 89
+    LOGOP  go to state 90
+
+
+State 71
+
+   28 EXPRESSION: AMPERSAND EXPRESSION .
+   30           | EXPRESSION . BINOP EXPRESSION
+   31           | EXPRESSION . RELOP EXPRESSION
+   32           | EXPRESSION . LOGOP EXPRESSION
+
+    STAR  shift, and go to state 75
+
+    $default  reduce using rule 28 (EXPRESSION)
+
+    BINOP  go to state 88
+    RELOP  go to state 89
+    LOGOP  go to state 90
+
+
+State 72
+
+   29 EXPRESSION: NOT EXPRESSION .
+   30           | EXPRESSION . BINOP EXPRESSION
+   31           | EXPRESSION . RELOP EXPRESSION
+   32           | EXPRESSION . LOGOP EXPRESSION
+
+    STAR  shift, and go to state 75
+
+    $default  reduce using rule 29 (EXPRESSION)
+
+    BINOP  go to state 88
+    RELOP  go to state 89
+    LOGOP  go to state 90
+
+
+State 73
+
+   34 EXPRESSION: VAR DIMENSION_SEQUENCE .
+
+    $default  reduce using rule 34 (EXPRESSION)
+
+
+State 74
+
+   19 STATEMENT: LB EXPRESSION RB . QUESM BLOCK COLON BLOCK SC
+
+    QUESM  shift, and go to state 106
+
+
+State 75
+
+   44 BINOP: STAR .
+
+    $default  reduce using rule 44 (BINOP)
+
+
+State 76
+
+   42 BINOP: PLUS .
+
+    $default  reduce using rule 42 (BINOP)
+
+
+State 77
+
+   43 BINOP: MINUS .
+
+    $default  reduce using rule 43 (BINOP)
+
+
+State 78
+
+   46 BINOP: MOD .
+
+    $default  reduce using rule 46 (BINOP)
+
+
+State 79
+
+   45 BINOP: DIV .
+
+    $default  reduce using rule 45 (BINOP)
+
+
+State 80
+
+   47 RELOP: EQCOMPARE .
+
+    $default  reduce using rule 47 (RELOP)
+
+
+State 81
+
+   48 RELOP: NEQCOMPARE .
+
+    $default  reduce using rule 48 (RELOP)
+
+
+State 82
+
+   51 RELOP: GTE .
+
+    $default  reduce using rule 51 (RELOP)
+
+
+State 83
+
+   49 RELOP: LTE .
+
+    $default  reduce using rule 49 (RELOP)
+
+
+State 84
+
+   52 RELOP: GT .
+
+    $default  reduce using rule 52 (RELOP)
+
+
+State 85
+
+   50 RELOP: LT .
+
+    $default  reduce using rule 50 (RELOP)
+
+
+State 86
+
+   53 LOGOP: AND .
+
+    $default  reduce using rule 53 (LOGOP)
+
+
+State 87
+
+   54 LOGOP: OR .
+
+    $default  reduce using rule 54 (LOGOP)
+
+
+State 88
+
+   30 EXPRESSION: EXPRESSION BINOP . EXPRESSION
+
+    LB         shift, and go to state 46
+    STAR       shift, and go to state 27
+    AMPERSAND  shift, and go to state 47
+    NOT        shift, and go to state 48
+    VAR        shift, and go to state 49
+    NUMINT     shift, and go to state 50
+
+    EXPRESSION     go to state 107
+    STAR_SEQUENCE  go to state 52
+
+
+State 89
+
+   31 EXPRESSION: EXPRESSION RELOP . EXPRESSION
+
+    LB         shift, and go to state 46
+    STAR       shift, and go to state 27
+    AMPERSAND  shift, and go to state 47
+    NOT        shift, and go to state 48
+    VAR        shift, and go to state 49
+    NUMINT     shift, and go to state 50
+
+    EXPRESSION     go to state 108
+    STAR_SEQUENCE  go to state 52
+
+
+State 90
+
+   32 EXPRESSION: EXPRESSION LOGOP . EXPRESSION
+
+    LB         shift, and go to state 46
+    STAR       shift, and go to state 27
+    AMPERSAND  shift, and go to state 47
+    NOT        shift, and go to state 48
+    VAR        shift, and go to state 49
+    NUMINT     shift, and go to state 50
+
+    EXPRESSION     go to state 109
+    STAR_SEQUENCE  go to state 52
+
+
+State 91
+
+   30 EXPRESSION: EXPRESSION . BINOP EXPRESSION
+   31           | EXPRESSION . RELOP EXPRESSION
+   32           | EXPRESSION . LOGOP EXPRESSION
+   33           | STAR_SEQUENCE EXPRESSION .
+
+    STAR        shift, and go to state 75
+    PLUS        shift, and go to state 76
+    MINUS       shift, and go to state 77
+    MOD         shift, and go to state 78
+    DIV         shift, and go to state 79
+    EQCOMPARE   shift, and go to state 80
+    NEQCOMPARE  shift, and go to state 81
+    GTE         shift, and go to state 82
+    LTE         shift, and go to state 83
+    GT          shift, and go to state 84
+    LT          shift, and go to state 85
+    AND         shift, and go to state 86
+    OR          shift, and go to state 87
+
+    STAR        [reduce using rule 33 (EXPRESSION)]
+    PLUS        [reduce using rule 33 (EXPRESSION)]
+    MINUS       [reduce using rule 33 (EXPRESSION)]
+    MOD         [reduce using rule 33 (EXPRESSION)]
+    DIV         [reduce using rule 33 (EXPRESSION)]
+    EQCOMPARE   [reduce using rule 33 (EXPRESSION)]
+    NEQCOMPARE  [reduce using rule 33 (EXPRESSION)]
+    GTE         [reduce using rule 33 (EXPRESSION)]
+    LTE         [reduce using rule 33 (EXPRESSION)]
+    GT          [reduce using rule 33 (EXPRESSION)]
+    LT          [reduce using rule 33 (EXPRESSION)]
+    AND         [reduce using rule 33 (EXPRESSION)]
+    OR          [reduce using rule 33 (EXPRESSION)]
+    $default    reduce using rule 33 (EXPRESSION)
+
+    BINOP  go to state 88
+    RELOP  go to state 89
+    LOGOP  go to state 90
+
+
+State 92
+
+   15 STATEMENT: IF LB EXPRESSION . RB BLOCK ELSE BLOCK
+   16          | IF LB EXPRESSION . RB BLOCK
+   30 EXPRESSION: EXPRESSION . BINOP EXPRESSION
+   31           | EXPRESSION . RELOP EXPRESSION
+   32           | EXPRESSION . LOGOP EXPRESSION
+
+    RB          shift, and go to state 110
+    STAR        shift, and go to state 75
+    PLUS        shift, and go to state 76
+    MINUS       shift, and go to state 77
+    MOD         shift, and go to state 78
+    DIV         shift, and go to state 79
+    EQCOMPARE   shift, and go to state 80
+    NEQCOMPARE  shift, and go to state 81
+    GTE         shift, and go to state 82
+    LTE         shift, and go to state 83
+    GT          shift, and go to state 84
+    LT          shift, and go to state 85
+    AND         shift, and go to state 86
+    OR          shift, and go to state 87
+
+    BINOP  go to state 88
+    RELOP  go to state 89
+    LOGOP  go to state 90
+
+
+State 93
+
+   20 STATEMENT: FOR LB ASSIGNMENT . SC EXPRESSION SC ASSIGNMENT RB BLOCK
+
+    SC  shift, and go to state 111
+
+
+State 94
+
+   18 STATEMENT: DO LCB BLOCK . RCB WHILE LB EXPRESSION RB SC
+
+    RCB  shift, and go to state 112
+
+
+State 95
+
+   17 STATEMENT: WHILE LB EXPRESSION . RB BLOCK
+   30 EXPRESSION: EXPRESSION . BINOP EXPRESSION
+   31           | EXPRESSION . RELOP EXPRESSION
+   32           | EXPRESSION . LOGOP EXPRESSION
+
+    RB          shift, and go to state 113
+    STAR        shift, and go to state 75
+    PLUS        shift, and go to state 76
+    MINUS       shift, and go to state 77
+    MOD         shift, and go to state 78
+    DIV         shift, and go to state 79
+    EQCOMPARE   shift, and go to state 80
+    NEQCOMPARE  shift, and go to state 81
+    GTE         shift, and go to state 82
+    LTE         shift, and go to state 83
+    GT          shift, and go to state 84
+    LT          shift, and go to state 85
+    AND         shift, and go to state 86
+    OR          shift, and go to state 87
+
+    BINOP  go to state 88
+    RELOP  go to state 89
+    LOGOP  go to state 90
+
+
+State 96
+
+   38 DIMENSION_SEQUENCE: LSB NUMINT . RSB DIMENSION_SEQUENCE
+   39                   | LSB NUMINT . RSB
+
+    RSB  shift, and go to state 114
+
+
+State 97
+
+   25 ASSIGNMENT: VAR EQ EXPRESSION .
+   30 EXPRESSION: EXPRESSION . BINOP EXPRESSION
+   31           | EXPRESSION . RELOP EXPRESSION
+   32           | EXPRESSION . LOGOP EXPRESSION
+
+    STAR        shift, and go to state 75
+    PLUS        shift, and go to state 76
+    MINUS       shift, and go to state 77
+    MOD         shift, and go to state 78
+    DIV         shift, and go to state 79
+    EQCOMPARE   shift, and go to state 80
+    NEQCOMPARE  shift, and go to state 81
+    GTE         shift, and go to state 82
+    LTE         shift, and go to state 83
+    GT          shift, and go to state 84
+    LT          shift, and go to state 85
+    AND         shift, and go to state 86
+    OR          shift, and go to state 87
+
+    $default  reduce using rule 25 (ASSIGNMENT)
+
+    BINOP  go to state 88
+    RELOP  go to state 89
+    LOGOP  go to state 90
+
+
+State 98
+
+   26 ASSIGNMENT: VAR DIMENSION_SEQUENCE EQ . EXPRESSION
+
+    LB         shift, and go to state 46
+    STAR       shift, and go to state 27
+    AMPERSAND  shift, and go to state 47
+    NOT        shift, and go to state 48
+    VAR        shift, and go to state 49
+    NUMINT     shift, and go to state 50
+
+    EXPRESSION     go to state 115
+    STAR_SEQUENCE  go to state 52
+
+
+State 99
+
+   27 ASSIGNMENT: STAR_SEQUENCE EXPRESSION EQ . EXPRESSION
+
+    LB         shift, and go to state 46
+    STAR       shift, and go to state 27
+    AMPERSAND  shift, and go to state 47
+    NOT        shift, and go to state 48
+    VAR        shift, and go to state 49
+    NUMINT     shift, and go to state 50
+
+    EXPRESSION     go to state 116
+    STAR_SEQUENCE  go to state 52
+
+
+State 100
+
+   64 POINTER_SEQUENCE: STAR POINTER_SEQUENCE .
+
+    $default  reduce using rule 64 (POINTER_SEQUENCE)
+
+
+State 101
+
+   62 DECLARATION_SEQUENCE: LSB . NUMINT RSB DECLARATION_SEQUENCE
+   63                     | LSB . NUMINT RSB
+
+    NUMINT  shift, and go to state 117
+
+
+State 102
+
+   57 VAR_LIST: VAR COMMA . VAR_LIST
+
+    STAR  shift, and go to state 66
+    VAR   shift, and go to state 67
+
+    VAR_LIST          go to state 118
+    POINTER_SEQUENCE  go to state 69
+
+
+State 103
+
+   56 VAR_LIST: VAR DECLARATION_SEQUENCE . COMMA VAR_LIST
+   59         | VAR DECLARATION_SEQUENCE .
+
+    COMMA  shift, and go to state 119
+
+    $default  reduce using rule 59 (VAR_LIST)
+
+
+State 104
+
+   58 VAR_LIST: POINTER_SEQUENCE VAR . COMMA VAR_LIST
+   60         | POINTER_SEQUENCE VAR .
+
+    COMMA  shift, and go to state 120
+
+    $default  reduce using rule 60 (VAR_LIST)
+
+
+State 105
+
+   36 EXPRESSION: LB EXPRESSION RB .
+
+    $default  reduce using rule 36 (EXPRESSION)
+
+
+State 106
+
+   19 STATEMENT: LB EXPRESSION RB QUESM . BLOCK COLON BLOCK SC
+
+    LCB  shift, and go to state 23
+
+    BLOCK  go to state 121
+
+
+State 107
+
+   30 EXPRESSION: EXPRESSION . BINOP EXPRESSION
+   30           | EXPRESSION BINOP EXPRESSION .
+   31           | EXPRESSION . RELOP EXPRESSION
+   32           | EXPRESSION . LOGOP EXPRESSION
+
+    STAR        shift, and go to state 75
+    PLUS        shift, and go to state 76
+    MINUS       shift, and go to state 77
+    MOD         shift, and go to state 78
+    DIV         shift, and go to state 79
+    EQCOMPARE   shift, and go to state 80
+    NEQCOMPARE  shift, and go to state 81
+    GTE         shift, and go to state 82
+    LTE         shift, and go to state 83
+    GT          shift, and go to state 84
+    LT          shift, and go to state 85
+    AND         shift, and go to state 86
+    OR          shift, and go to state 87
+
+    STAR        [reduce using rule 30 (EXPRESSION)]
+    PLUS        [reduce using rule 30 (EXPRESSION)]
+    MINUS       [reduce using rule 30 (EXPRESSION)]
+    MOD         [reduce using rule 30 (EXPRESSION)]
+    DIV         [reduce using rule 30 (EXPRESSION)]
+    EQCOMPARE   [reduce using rule 30 (EXPRESSION)]
+    NEQCOMPARE  [reduce using rule 30 (EXPRESSION)]
+    GTE         [reduce using rule 30 (EXPRESSION)]
+    LTE         [reduce using rule 30 (EXPRESSION)]
+    GT          [reduce using rule 30 (EXPRESSION)]
+    LT          [reduce using rule 30 (EXPRESSION)]
+    AND         [reduce using rule 30 (EXPRESSION)]
+    OR          [reduce using rule 30 (EXPRESSION)]
+    $default    reduce using rule 30 (EXPRESSION)
+
+    BINOP  go to state 88
+    RELOP  go to state 89
+    LOGOP  go to state 90
+
+
+State 108
+
+   30 EXPRESSION: EXPRESSION . BINOP EXPRESSION
+   31           | EXPRESSION . RELOP EXPRESSION
+   31           | EXPRESSION RELOP EXPRESSION .
+   32           | EXPRESSION . LOGOP EXPRESSION
+
+    STAR        shift, and go to state 75
+    PLUS        shift, and go to state 76
+    MINUS       shift, and go to state 77
+    MOD         shift, and go to state 78
+    DIV         shift, and go to state 79
+    EQCOMPARE   shift, and go to state 80
+    NEQCOMPARE  shift, and go to state 81
+    GTE         shift, and go to state 82
+    LTE         shift, and go to state 83
+    GT          shift, and go to state 84
+    LT          shift, and go to state 85
+    AND         shift, and go to state 86
+    OR          shift, and go to state 87
+
+    STAR        [reduce using rule 31 (EXPRESSION)]
+    PLUS        [reduce using rule 31 (EXPRESSION)]
+    MINUS       [reduce using rule 31 (EXPRESSION)]
+    MOD         [reduce using rule 31 (EXPRESSION)]
+    DIV         [reduce using rule 31 (EXPRESSION)]
+    EQCOMPARE   [reduce using rule 31 (EXPRESSION)]
+    NEQCOMPARE  [reduce using rule 31 (EXPRESSION)]
+    GTE         [reduce using rule 31 (EXPRESSION)]
+    LTE         [reduce using rule 31 (EXPRESSION)]
+    GT          [reduce using rule 31 (EXPRESSION)]
+    LT          [reduce using rule 31 (EXPRESSION)]
+    AND         [reduce using rule 31 (EXPRESSION)]
+    OR          [reduce using rule 31 (EXPRESSION)]
+    $default    reduce using rule 31 (EXPRESSION)
+
+    BINOP  go to state 88
+    RELOP  go to state 89
+    LOGOP  go to state 90
+
+
+State 109
+
+   30 EXPRESSION: EXPRESSION . BINOP EXPRESSION
+   31           | EXPRESSION . RELOP EXPRESSION
+   32           | EXPRESSION . LOGOP EXPRESSION
+   32           | EXPRESSION LOGOP EXPRESSION .
+
+    STAR        shift, and go to state 75
+    PLUS        shift, and go to state 76
+    MINUS       shift, and go to state 77
+    MOD         shift, and go to state 78
+    DIV         shift, and go to state 79
+    EQCOMPARE   shift, and go to state 80
+    NEQCOMPARE  shift, and go to state 81
+    GTE         shift, and go to state 82
+    LTE         shift, and go to state 83
+    GT          shift, and go to state 84
+    LT          shift, and go to state 85
+    AND         shift, and go to state 86
+    OR          shift, and go to state 87
+
+    STAR        [reduce using rule 32 (EXPRESSION)]
+    PLUS        [reduce using rule 32 (EXPRESSION)]
+    MINUS       [reduce using rule 32 (EXPRESSION)]
+    MOD         [reduce using rule 32 (EXPRESSION)]
+    DIV         [reduce using rule 32 (EXPRESSION)]
+    EQCOMPARE   [reduce using rule 32 (EXPRESSION)]
+    NEQCOMPARE  [reduce using rule 32 (EXPRESSION)]
+    GTE         [reduce using rule 32 (EXPRESSION)]
+    LTE         [reduce using rule 32 (EXPRESSION)]
+    GT          [reduce using rule 32 (EXPRESSION)]
+    LT          [reduce using rule 32 (EXPRESSION)]
+    AND         [reduce using rule 32 (EXPRESSION)]
+    OR          [reduce using rule 32 (EXPRESSION)]
+    $default    reduce using rule 32 (EXPRESSION)
+
+    BINOP  go to state 88
+    RELOP  go to state 89
+    LOGOP  go to state 90
+
+
+State 110
+
+   15 STATEMENT: IF LB EXPRESSION RB . BLOCK ELSE BLOCK
+   16          | IF LB EXPRESSION RB . BLOCK
+
+    LCB  shift, and go to state 23
+
+    BLOCK  go to state 122
+
+
+State 111
+
+   20 STATEMENT: FOR LB ASSIGNMENT SC . EXPRESSION SC ASSIGNMENT RB BLOCK
+
+    LB         shift, and go to state 46
+    STAR       shift, and go to state 27
+    AMPERSAND  shift, and go to state 47
+    NOT        shift, and go to state 48
+    VAR        shift, and go to state 49
+    NUMINT     shift, and go to state 50
+
+    EXPRESSION     go to state 123
+    STAR_SEQUENCE  go to state 52
+
+
+State 112
+
+   18 STATEMENT: DO LCB BLOCK RCB . WHILE LB EXPRESSION RB SC
+
+    WHILE  shift, and go to state 124
+
+
+State 113
+
+   17 STATEMENT: WHILE LB EXPRESSION RB . BLOCK
+
+    LCB  shift, and go to state 23
+
+    BLOCK  go to state 125
+
+
+State 114
+
+   38 DIMENSION_SEQUENCE: LSB NUMINT RSB . DIMENSION_SEQUENCE
+   39                   | LSB NUMINT RSB .
+
+    LSB  shift, and go to state 58
+
+    $default  reduce using rule 39 (DIMENSION_SEQUENCE)
+
+    DIMENSION_SEQUENCE  go to state 126
+
+
+State 115
+
+   26 ASSIGNMENT: VAR DIMENSION_SEQUENCE EQ EXPRESSION .
+   30 EXPRESSION: EXPRESSION . BINOP EXPRESSION
+   31           | EXPRESSION . RELOP EXPRESSION
+   32           | EXPRESSION . LOGOP EXPRESSION
+
+    STAR        shift, and go to state 75
+    PLUS        shift, and go to state 76
+    MINUS       shift, and go to state 77
+    MOD         shift, and go to state 78
+    DIV         shift, and go to state 79
+    EQCOMPARE   shift, and go to state 80
+    NEQCOMPARE  shift, and go to state 81
+    GTE         shift, and go to state 82
+    LTE         shift, and go to state 83
+    GT          shift, and go to state 84
+    LT          shift, and go to state 85
+    AND         shift, and go to state 86
+    OR          shift, and go to state 87
+
+    $default  reduce using rule 26 (ASSIGNMENT)
+
+    BINOP  go to state 88
+    RELOP  go to state 89
+    LOGOP  go to state 90
+
+
+State 116
+
+   27 ASSIGNMENT: STAR_SEQUENCE EXPRESSION EQ EXPRESSION .
+   30 EXPRESSION: EXPRESSION . BINOP EXPRESSION
+   31           | EXPRESSION . RELOP EXPRESSION
+   32           | EXPRESSION . LOGOP EXPRESSION
+
+    STAR        shift, and go to state 75
+    PLUS        shift, and go to state 76
+    MINUS       shift, and go to state 77
+    MOD         shift, and go to state 78
+    DIV         shift, and go to state 79
+    EQCOMPARE   shift, and go to state 80
+    NEQCOMPARE  shift, and go to state 81
+    GTE         shift, and go to state 82
+    LTE         shift, and go to state 83
+    GT          shift, and go to state 84
+    LT          shift, and go to state 85
+    AND         shift, and go to state 86
+    OR          shift, and go to state 87
+
+    $default  reduce using rule 27 (ASSIGNMENT)
+
+    BINOP  go to state 88
+    RELOP  go to state 89
+    LOGOP  go to state 90
+
+
+State 117
+
+   62 DECLARATION_SEQUENCE: LSB NUMINT . RSB DECLARATION_SEQUENCE
+   63                     | LSB NUMINT . RSB
+
+    RSB  shift, and go to state 127
+
+
+State 118
+
+   57 VAR_LIST: VAR COMMA VAR_LIST .
+
+    $default  reduce using rule 57 (VAR_LIST)
+
+
+State 119
+
+   56 VAR_LIST: VAR DECLARATION_SEQUENCE COMMA . VAR_LIST
+
+    STAR  shift, and go to state 66
+    VAR   shift, and go to state 67
+
+    VAR_LIST          go to state 128
+    POINTER_SEQUENCE  go to state 69
+
+
+State 120
+
+   58 VAR_LIST: POINTER_SEQUENCE VAR COMMA . VAR_LIST
+
+    STAR  shift, and go to state 66
+    VAR   shift, and go to state 67
+
+    VAR_LIST          go to state 129
+    POINTER_SEQUENCE  go to state 69
+
+
+State 121
+
+   19 STATEMENT: LB EXPRESSION RB QUESM BLOCK . COLON BLOCK SC
+
+    COLON  shift, and go to state 130
+
+
+State 122
+
+   15 STATEMENT: IF LB EXPRESSION RB BLOCK . ELSE BLOCK
+   16          | IF LB EXPRESSION RB BLOCK .
+
+    ELSE  shift, and go to state 131
+
+    $default  reduce using rule 16 (STATEMENT)
+
+
+State 123
+
+   20 STATEMENT: FOR LB ASSIGNMENT SC EXPRESSION . SC ASSIGNMENT RB BLOCK
+   30 EXPRESSION: EXPRESSION . BINOP EXPRESSION
+   31           | EXPRESSION . RELOP EXPRESSION
+   32           | EXPRESSION . LOGOP EXPRESSION
+
+    SC          shift, and go to state 132
+    STAR        shift, and go to state 75
+    PLUS        shift, and go to state 76
+    MINUS       shift, and go to state 77
+    MOD         shift, and go to state 78
+    DIV         shift, and go to state 79
+    EQCOMPARE   shift, and go to state 80
+    NEQCOMPARE  shift, and go to state 81
+    GTE         shift, and go to state 82
+    LTE         shift, and go to state 83
+    GT          shift, and go to state 84
+    LT          shift, and go to state 85
+    AND         shift, and go to state 86
+    OR          shift, and go to state 87
+
+    BINOP  go to state 88
+    RELOP  go to state 89
+    LOGOP  go to state 90
+
+
+State 124
+
+   18 STATEMENT: DO LCB BLOCK RCB WHILE . LB EXPRESSION RB SC
+
+    LB  shift, and go to state 133
+
+
+State 125
+
+   17 STATEMENT: WHILE LB EXPRESSION RB BLOCK .
+
+    $default  reduce using rule 17 (STATEMENT)
+
+
+State 126
+
+   38 DIMENSION_SEQUENCE: LSB NUMINT RSB DIMENSION_SEQUENCE .
+
+    $default  reduce using rule 38 (DIMENSION_SEQUENCE)
+
+
+State 127
+
+   62 DECLARATION_SEQUENCE: LSB NUMINT RSB . DECLARATION_SEQUENCE
+   63                     | LSB NUMINT RSB .
+
+    LSB  shift, and go to state 101
+
+    $default  reduce using rule 63 (DECLARATION_SEQUENCE)
+
+    DECLARATION_SEQUENCE  go to state 134
+
+
+State 128
+
+   56 VAR_LIST: VAR DECLARATION_SEQUENCE COMMA VAR_LIST .
+
+    $default  reduce using rule 56 (VAR_LIST)
+
+
+State 129
+
+   58 VAR_LIST: POINTER_SEQUENCE VAR COMMA VAR_LIST .
+
+    $default  reduce using rule 58 (VAR_LIST)
+
+
+State 130
+
+   19 STATEMENT: LB EXPRESSION RB QUESM BLOCK COLON . BLOCK SC
+
+    LCB  shift, and go to state 23
+
+    BLOCK  go to state 135
+
+
+State 131
+
+   15 STATEMENT: IF LB EXPRESSION RB BLOCK ELSE . BLOCK
+
+    LCB  shift, and go to state 23
+
+    BLOCK  go to state 136
+
+
+State 132
+
+   20 STATEMENT: FOR LB ASSIGNMENT SC EXPRESSION SC . ASSIGNMENT RB BLOCK
+
+    STAR  shift, and go to state 27
+    VAR   shift, and go to state 32
+
+    ASSIGNMENT     go to state 137
+    STAR_SEQUENCE  go to state 43
+
+
+State 133
+
+   18 STATEMENT: DO LCB BLOCK RCB WHILE LB . EXPRESSION RB SC
+
+    LB         shift, and go to state 46
+    STAR       shift, and go to state 27
+    AMPERSAND  shift, and go to state 47
+    NOT        shift, and go to state 48
+    VAR        shift, and go to state 49
+    NUMINT     shift, and go to state 50
+
+    EXPRESSION     go to state 138
+    STAR_SEQUENCE  go to state 52
+
+
+State 134
+
+   62 DECLARATION_SEQUENCE: LSB NUMINT RSB DECLARATION_SEQUENCE .
+
+    $default  reduce using rule 62 (DECLARATION_SEQUENCE)
+
+
+State 135
+
+   19 STATEMENT: LB EXPRESSION RB QUESM BLOCK COLON BLOCK . SC
+
+    SC  shift, and go to state 139
+
+
+State 136
+
+   15 STATEMENT: IF LB EXPRESSION RB BLOCK ELSE BLOCK .
+
+    $default  reduce using rule 15 (STATEMENT)
+
+
+State 137
+
+   20 STATEMENT: FOR LB ASSIGNMENT SC EXPRESSION SC ASSIGNMENT . RB BLOCK
+
+    RB  shift, and go to state 140
+
+
+State 138
+
+   18 STATEMENT: DO LCB BLOCK RCB WHILE LB EXPRESSION . RB SC
+   30 EXPRESSION: EXPRESSION . BINOP EXPRESSION
+   31           | EXPRESSION . RELOP EXPRESSION
+   32           | EXPRESSION . LOGOP EXPRESSION
+
+    RB          shift, and go to state 141
+    STAR        shift, and go to state 75
+    PLUS        shift, and go to state 76
+    MINUS       shift, and go to state 77
+    MOD         shift, and go to state 78
+    DIV         shift, and go to state 79
+    EQCOMPARE   shift, and go to state 80
+    NEQCOMPARE  shift, and go to state 81
+    GTE         shift, and go to state 82
+    LTE         shift, and go to state 83
+    GT          shift, and go to state 84
+    LT          shift, and go to state 85
+    AND         shift, and go to state 86
+    OR          shift, and go to state 87
+
+    BINOP  go to state 88
+    RELOP  go to state 89
+    LOGOP  go to state 90
+
+
+State 139
+
+   19 STATEMENT: LB EXPRESSION RB QUESM BLOCK COLON BLOCK SC .
+
+    $default  reduce using rule 19 (STATEMENT)
+
+
+State 140
+
+   20 STATEMENT: FOR LB ASSIGNMENT SC EXPRESSION SC ASSIGNMENT RB . BLOCK
+
+    LCB  shift, and go to state 23
+
+    BLOCK  go to state 142
+
+
+State 141
+
+   18 STATEMENT: DO LCB BLOCK RCB WHILE LB EXPRESSION RB . SC
+
+    SC  shift, and go to state 143
+
+
+State 142
+
+   20 STATEMENT: FOR LB ASSIGNMENT SC EXPRESSION SC ASSIGNMENT RB BLOCK .
+
+    $default  reduce using rule 20 (STATEMENT)
+
+
+State 143
+
+   18 STATEMENT: DO LCB BLOCK RCB WHILE LB EXPRESSION RB SC .
+
+    $default  reduce using rule 18 (STATEMENT)
