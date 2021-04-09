@@ -49,7 +49,7 @@
 ">=" {return GTE;}
 "<=" {return LTE;}
 "!=" {return NE;}
-"&&" {return AND;}
+"&" {return AMPER;}
 "||" {return OR;}
 "!" {return NOT;}
 [\"] {return DQUOTE;}

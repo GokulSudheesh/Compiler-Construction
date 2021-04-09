@@ -145,7 +145,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 25 "projectMOD2.y"
+#line 25 "projectMOD.y"
 
 int data_type;
 char var_name[30];

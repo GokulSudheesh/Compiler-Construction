@@ -77,7 +77,7 @@ extern int yydebug;
     GTE = 283,
     LTE = 284,
     NE = 285,
-    AND = 286,
+    AMPER = 286,
     OR = 287,
     NOT = 288,
     DQUOTE = 289,
@@ -124,7 +124,7 @@ extern int yydebug;
 #define GTE 283
 #define LTE 284
 #define NE 285
-#define AND 286
+#define AMPER 286
 #define OR 287
 #define NOT 288
 #define DQUOTE 289
@@ -145,7 +145,7 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 26 "projectMOD2.y"
+#line 26 "projectMOD.y"
 
 int data_type;
 char var_name[30];
