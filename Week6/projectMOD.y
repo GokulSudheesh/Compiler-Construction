@@ -186,18 +186,18 @@ VAR_EXPN2	: VAR ARRAY_ACCESS UNARY_OPERATORS {
 			}
 
 VAR_ARRAY_ACCESS_LHS	: VAR ARRAY_ACCESS {
+					check_EXPNtype_lhs($1);
 					if(dims!=get_array_dimensions($1)){
 						printf("\n Error: Indexing error in array: %s\n", $1);
 						exit(0);
-					}
-					check_EXPNtype_lhs($1);
+					}					
 				}
 VAR_ARRAY_ACCESS_RHS	: VAR ARRAY_ACCESS {
+						check_EXPNtype_rhs($1);
 						if(dims!=get_array_dimensions($1)){
 							printf("\n Error: Indexing error in array: %s\n", $1);
 							exit(0);
-						}
-						check_EXPNtype_rhs($1);
+						}						
 				}
 ARRAY_ACCESS	: ARRAY_ACCESS LSQRB VAR RSQRB {
 					dims++;
@@ -231,18 +231,13 @@ ARRAY_ACCESS	: ARRAY_ACCESS LSQRB VAR RSQRB {
 					//printf("<LSQRB %d RSQRB>", $2);
 				}
 
-A_EXPN		:A_EXPN PLUS A_EXPN
-		|A_EXPN MINUS A_EXPN | A_EXPN1
-
-A_EXPN1		:A_EXPN1 MUL A_EXPN1
-		|A_EXPN1 DIV A_EXPN1 |A_EXPN1 MOD A_EXPN1 {
-			is_modulus = 1;
-		}
-		|A_EXPN2
-
-A_EXPN2		:A_EXPN2 EXP A_EXPN2 |A_EXPN3
-
-A_EXPN3		: LB A_EXPN RB
+A_EXPN	: A_EXPN PLUS A_EXPN
+		| A_EXPN MINUS A_EXPN 
+		| A_EXPN MUL A_EXPN
+		| A_EXPN DIV A_EXPN 
+		| A_EXPN MOD A_EXPN {is_modulus = 1;}
+		| A_EXPN EXP A_EXPN 
+		| LB A_EXPN RB
 		| NUMBER {
 			//printf("%d", $1);
 			expn_type = 0;

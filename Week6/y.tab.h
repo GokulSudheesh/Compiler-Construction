@@ -68,31 +68,31 @@ extern int yydebug;
     FOR = 274,
     DO = 275,
     WHILE = 276,
-    ET = 277,
-    EQ = 278,
-    GT = 279,
-    LT = 280,
-    GTE = 281,
-    LTE = 282,
-    NE = 283,
-    AMPER = 284,
-    OR = 285,
-    NOT = 286,
-    DQUOTE = 287,
-    PLUS = 288,
-    MINUS = 289,
-    MUL = 290,
-    DIV = 291,
-    MOD = 292,
-    EXP = 293,
-    UPLUS = 294,
-    UMINUS = 295,
-    INT = 296,
-    CHAR = 297,
-    FLOAT = 298,
-    DOUBLE = 299,
-    VAR = 300,
-    NUMBER = 301
+    NUMBER = 277,
+    ET = 278,
+    EQ = 279,
+    GT = 280,
+    LT = 281,
+    GTE = 282,
+    LTE = 283,
+    NE = 284,
+    AND = 285,
+    OR = 286,
+    NOT = 287,
+    DQUOTE = 288,
+    PLUS = 289,
+    MINUS = 290,
+    MUL = 291,
+    DIV = 292,
+    MOD = 293,
+    EXP = 294,
+    UPLUS = 295,
+    UMINUS = 296,
+    INT = 297,
+    CHAR = 298,
+    FLOAT = 299,
+    DOUBLE = 300,
+    VAR = 301
   };
 #endif
 /* Tokens.  */
@@ -115,43 +115,42 @@ extern int yydebug;
 #define FOR 274
 #define DO 275
 #define WHILE 276
-#define ET 277
-#define EQ 278
-#define GT 279
-#define LT 280
-#define GTE 281
-#define LTE 282
-#define NE 283
-#define AMPER 284
-#define OR 285
-#define NOT 286
-#define DQUOTE 287
-#define PLUS 288
-#define MINUS 289
-#define MUL 290
-#define DIV 291
-#define MOD 292
-#define EXP 293
-#define UPLUS 294
-#define UMINUS 295
-#define INT 296
-#define CHAR 297
-#define FLOAT 298
-#define DOUBLE 299
-#define VAR 300
-#define NUMBER 301
+#define NUMBER 277
+#define ET 278
+#define EQ 279
+#define GT 280
+#define LT 281
+#define GTE 282
+#define LTE 283
+#define NE 284
+#define AND 285
+#define OR 286
+#define NOT 287
+#define DQUOTE 288
+#define PLUS 289
+#define MINUS 290
+#define MUL 291
+#define DIV 292
+#define MOD 293
+#define EXP 294
+#define UPLUS 295
+#define UMINUS 296
+#define INT 297
+#define CHAR 298
+#define FLOAT 299
+#define DOUBLE 300
+#define VAR 301
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 26 "projectMOD.y"
+#line 26 "projectMOD2.y"
 
 int data_type;
 char var_name[30];
-int integer_val;
 
-#line 155 "y.tab.h"
+#line 154 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

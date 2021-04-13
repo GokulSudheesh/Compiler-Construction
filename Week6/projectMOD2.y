@@ -27,7 +27,7 @@
 int data_type;
 char var_name[30];
 }
-%token HASH INCLUDE HEADER_FILE MAIN LB RB LCB RCB LSQRB RSQRB SC COLON QMARK COMA IF ELSE FOR DO WHILE VAR NUMBER ET EQ GT LT GTE LTE NE AND OR NOT DQUOTE PLUS MINUS MUL DIV MOD EXP UPLUS UMINUS
+%token HASH INCLUDE HEADER_FILE MAIN LB RB LCB RCB LSQRB RSQRB SC COLON QMARK COMA IF ELSE FOR DO WHILE NUMBER ET EQ GT LT GTE LTE NE AND OR NOT DQUOTE PLUS MINUS MUL DIV MOD EXP UPLUS UMINUS
 
 %left PLUS MINUS
 %left MUL DIV MOD
@@ -36,9 +36,9 @@ char var_name[30];
 %token<data_type>CHAR
 %token<data_type>FLOAT
 %token<data_type>DOUBLE
-
+%token<var_name>VAR
 %type<data_type>DATA_TYPE
-%type<var_name>VAR
+
 %start prm
 
 %%
@@ -161,18 +161,18 @@ VAR_EXPN2	: VAR ARRAY_ACCESS UPLUS {
 			}
 
 VAR_ARRAY_ACCESS_LHS	: VAR ARRAY_ACCESS {
+					check_EXPNtype_lhs($1);
 					if(dims!=get_array_dimensions($1)){
 						printf("\n Error: Indexing error in array: %s\n", $1);
 						exit(0);
-					}
-					check_EXPNtype_lhs($1);
+					}					
 				}
 VAR_ARRAY_ACCESS_RHS	: VAR ARRAY_ACCESS {
+						check_EXPNtype_rhs($1);
 						if(dims!=get_array_dimensions($1)){
 							printf("\n Error: Indexing error in array: %s\n", $1);
 							exit(0);
-						}
-						check_EXPNtype_rhs($1);
+						}						
 				}
 ARRAY_ACCESS	: ARRAY_ACCESS LSQRB VAR RSQRB {
 					dims++;
