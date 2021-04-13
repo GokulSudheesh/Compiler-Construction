@@ -15,7 +15,6 @@
 	int ptr_depth;
 	struct symbol_table{char var_name[30]; int type; int dim; int pointerDepth; int dim_bounds[5];}var_list[20];
 	int var_count=-1;
-	int number;
 	extern int lookup_in_table(char var[30]);
 	extern void insert_to_table(char var[30], int type);
 	extern int get_array_dimensions(char var[30]);
@@ -26,8 +25,9 @@
 %union{
 int data_type;
 char var_name[30];
+int integer_val;
 }
-%token HASH INCLUDE HEADER_FILE MAIN LB RB LCB RCB LSQRB RSQRB SC COLON QMARK COMA IF ELSE FOR DO WHILE VAR NUMBER ET EQ GT LT GTE LTE NE AND OR NOT DQUOTE PLUS MINUS MUL DIV MOD EXP UPLUS UMINUS
+%token HASH INCLUDE HEADER_FILE MAIN LB RB LCB RCB LSQRB RSQRB SC COLON QMARK COMA IF ELSE FOR DO WHILE ET EQ GT LT GTE LTE NE AND OR NOT DQUOTE PLUS MINUS MUL DIV MOD EXP UPLUS UMINUS
 
 %left PLUS MINUS
 %left MUL DIV MOD
@@ -36,9 +36,10 @@ char var_name[30];
 %token<data_type>CHAR
 %token<data_type>FLOAT
 %token<data_type>DOUBLE
-
+%token<var_name>VAR
+%token<integer_val>NUMBER
 %type<data_type>DATA_TYPE
-%type<var_name>VAR
+
 %start prm
 
 %%
@@ -86,13 +87,13 @@ ARRAY_DECLARATION: VAR ARRAY_SIZE {
 	}
 ARRAY_SIZE : ARRAY_SIZE LSQRB NUMBER RSQRB {
 				dims++;
-				array_dim[dims] = number;
-				//printf("<ARRAY_SIZE LSQRB %d RSQRB>", number);
+				array_dim[dims] = $3;
+				//printf("<ARRAY_SIZE LSQRB %d RSQRB>", $3);
 			}
 			| LSQRB NUMBER RSQRB {
 				dims = 0;
-				array_dim[dims] = number;
-				//printf("<LSQRB %d RSQRB>", number);
+				array_dim[dims] = $2;
+				//printf("<LSQRB %d RSQRB>", $2);
 			}
 MAIN_TYPE : INT
 DATA_TYPE : INT {
@@ -178,7 +179,7 @@ ARRAY_ACCESS	: ARRAY_ACCESS LSQRB VAR RSQRB {
 				}
 				| ARRAY_ACCESS LSQRB NUMBER RSQRB {
 					dims++;
-					//printf("<ARRAY_ACCESS LSQRB %d RSQRB>", number);
+					//printf("<ARRAY_ACCESS LSQRB %d RSQRB>", $3);
 				}
 				| LSQRB VAR RSQRB {
 					dims=0;
@@ -194,7 +195,7 @@ ARRAY_ACCESS	: ARRAY_ACCESS LSQRB VAR RSQRB {
 				| LSQRB NUMBER RSQRB{
 					dims=0;
 					dims++;
-					//printf("<LSQRB %d RSQRB>", number);
+					//printf("<LSQRB %d RSQRB>", $2);
 				}
 
 A_EXPN		:A_EXPN PLUS A_EXPN
@@ -210,7 +211,7 @@ A_EXPN2		:A_EXPN2 EXP A_EXPN2 |A_EXPN3
 
 A_EXPN3		: LB A_EXPN RB
 		| NUMBER {
-			//printf("%d", number);
+			//printf("%d", $1);
 			expn_type = 0;
 		}
 		| VAR UNARY_OPERATORS {

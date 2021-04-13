@@ -6,8 +6,6 @@
 	#include"y.tab.h"
 	#include<math.h>
 	extern int var_count;
-	extern int number;
-
 %}
 
 %%
@@ -54,10 +52,7 @@
 "!" {return NOT;}
 [\"] {return DQUOTE;}
 ([A-Z]+|[a-z]+)([A-Z]+|[a-z]+|[0-9]+)* {strcpy(yylval.var_name,yytext);return VAR;}
-[0-9]+ {
-           number=atoi(yytext);
-           return NUMBER;
-      	}
+[0-9]+ {yylval.integer_val = atoi(yytext); return NUMBER;}
 [\n\t ]+  {/*new line or space*/}
 . {printf("invalid character sequence %s\n",yytext); exit(0);}
 %%

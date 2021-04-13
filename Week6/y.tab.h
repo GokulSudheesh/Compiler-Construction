@@ -68,31 +68,31 @@ extern int yydebug;
     FOR = 274,
     DO = 275,
     WHILE = 276,
-    VAR = 277,
-    NUMBER = 278,
-    ET = 279,
-    EQ = 280,
-    GT = 281,
-    LT = 282,
-    GTE = 283,
-    LTE = 284,
-    NE = 285,
-    AMPER = 286,
-    OR = 287,
-    NOT = 288,
-    DQUOTE = 289,
-    PLUS = 290,
-    MINUS = 291,
-    MUL = 292,
-    DIV = 293,
-    MOD = 294,
-    EXP = 295,
-    UPLUS = 296,
-    UMINUS = 297,
-    INT = 298,
-    CHAR = 299,
-    FLOAT = 300,
-    DOUBLE = 301
+    ET = 277,
+    EQ = 278,
+    GT = 279,
+    LT = 280,
+    GTE = 281,
+    LTE = 282,
+    NE = 283,
+    AMPER = 284,
+    OR = 285,
+    NOT = 286,
+    DQUOTE = 287,
+    PLUS = 288,
+    MINUS = 289,
+    MUL = 290,
+    DIV = 291,
+    MOD = 292,
+    EXP = 293,
+    UPLUS = 294,
+    UMINUS = 295,
+    INT = 296,
+    CHAR = 297,
+    FLOAT = 298,
+    DOUBLE = 299,
+    VAR = 300,
+    NUMBER = 301
   };
 #endif
 /* Tokens.  */
@@ -115,31 +115,31 @@ extern int yydebug;
 #define FOR 274
 #define DO 275
 #define WHILE 276
-#define VAR 277
-#define NUMBER 278
-#define ET 279
-#define EQ 280
-#define GT 281
-#define LT 282
-#define GTE 283
-#define LTE 284
-#define NE 285
-#define AMPER 286
-#define OR 287
-#define NOT 288
-#define DQUOTE 289
-#define PLUS 290
-#define MINUS 291
-#define MUL 292
-#define DIV 293
-#define MOD 294
-#define EXP 295
-#define UPLUS 296
-#define UMINUS 297
-#define INT 298
-#define CHAR 299
-#define FLOAT 300
-#define DOUBLE 301
+#define ET 277
+#define EQ 278
+#define GT 279
+#define LT 280
+#define GTE 281
+#define LTE 282
+#define NE 283
+#define AMPER 284
+#define OR 285
+#define NOT 286
+#define DQUOTE 287
+#define PLUS 288
+#define MINUS 289
+#define MUL 290
+#define DIV 291
+#define MOD 292
+#define EXP 293
+#define UPLUS 294
+#define UMINUS 295
+#define INT 296
+#define CHAR 297
+#define FLOAT 298
+#define DOUBLE 299
+#define VAR 300
+#define NUMBER 301
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -149,8 +149,9 @@ union YYSTYPE
 
 int data_type;
 char var_name[30];
+int integer_val;
 
-#line 154 "y.tab.h"
+#line 155 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;

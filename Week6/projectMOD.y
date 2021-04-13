@@ -4,6 +4,7 @@
 	#include<string.h>
 	int yylex(void);
 	int yyerror(const char *s);
+	int yylineno;
 	int success = 1;
 	int current_data_type;
 	int expn_type=-1;
@@ -15,7 +16,6 @@
 	int ptr_depth;
 	struct symbol_table{char var_name[30]; int type; int dim; int pointerDepth; int dim_bounds[5];}var_list[20];
 	int var_count=-1;
-	int number;
 	extern int lookup_in_table(char var[30]);
 	extern void insert_to_table(char var[30], int type);
 	extern int get_array_dimensions(char var[30]);
@@ -26,8 +26,9 @@
 %union{
 int data_type;
 char var_name[30];
+int integer_val;
 }
-%token HASH INCLUDE HEADER_FILE MAIN LB RB LCB RCB LSQRB RSQRB SC COLON QMARK COMA IF ELSE FOR DO WHILE VAR NUMBER ET EQ GT LT GTE LTE NE AMPER OR NOT DQUOTE PLUS MINUS MUL DIV MOD EXP UPLUS UMINUS
+%token HASH INCLUDE HEADER_FILE MAIN LB RB LCB RCB LSQRB RSQRB SC COLON QMARK COMA IF ELSE FOR DO WHILE ET EQ GT LT GTE LTE NE AMPER OR NOT DQUOTE PLUS MINUS MUL DIV MOD EXP UPLUS UMINUS
 
 %left PLUS MINUS
 %left MUL DIV MOD
@@ -36,9 +37,10 @@ char var_name[30];
 %token<data_type>CHAR
 %token<data_type>FLOAT
 %token<data_type>DOUBLE
-
+%token<var_name>VAR
+%token<integer_val>NUMBER
 %type<data_type>DATA_TYPE
-%type<var_name>VAR
+
 %start prm
 
 %%
@@ -86,13 +88,13 @@ ARRAY_DECLARATION: VAR ARRAY_SIZE {
 	}
 ARRAY_SIZE : ARRAY_SIZE LSQRB NUMBER RSQRB {
 				dims++;
-				array_dim[dims] = number;
-				//printf("<ARRAY_SIZE LSQRB %d RSQRB>", number);
+				array_dim[dims] = $3;
+				//printf("<ARRAY_SIZE LSQRB %d RSQRB>", $3);
 			}
 			| LSQRB NUMBER RSQRB {
 				dims = 0;
-				array_dim[dims] = number;
-				//printf("<LSQRB %d RSQRB>", number);
+				array_dim[dims] = $2;
+				//printf("<LSQRB %d RSQRB>", $2);
 			}
 MAIN_TYPE : INT
 DATA_TYPE : INT {
@@ -115,6 +117,7 @@ DATA_TYPE : INT {
 PROGRAM_STATEMENTS :	VAR_EXPN1 SC
 				| SC
 				| VAR_EXPN2 SC
+				| POINTER_STATEMENTS
 				| LB LOGICAL_EXPN RB QMARK LCB BODY2 RCB COLON LCB BODY2 RCB 
 				| IF LB LOGICAL_EXPN RB LCB BODY2 RCB
 				| IF LB LOGICAL_EXPN RB LCB BODY2 RCB ELSE LCB BODY2 RCB
@@ -122,10 +125,41 @@ PROGRAM_STATEMENTS :	VAR_EXPN1 SC
 				| DO LCB BODY2 RCB WHILE LB LOGICAL_EXPN RB SC
 				| FOR LB VAR_EXPN1 SC LOGICAL_EXPN SC VAR_EXPN2 RB LCB BODY2 RCB
 
+POINTER_STATEMENTS : POINTER_STATEMENT1 {/*pointer_var = &var;*/}
+
+POINTER_STATEMENT1 : VAR EQ POINTER_STATEMENT1RHS SC {
+						expn_type = -1;
+					}
+POINTER_STATEMENT1RHS : REFERENCE_VAR POINTER_STATEMENT1RHS_ARTH {
+						printf("Expn type: %d", expn_type);
+						if (expn_type != 0){
+							printf("WARNING Line: %d Variable is not an INT type.", yylineno);
+						}
+						if (is_modulus){
+							if(expn_type!=0){
+								yyerror("Modulus operator reserved for integers."); exit(0);
+							}
+							is_modulus = 0;
+						} 
+					}
+					| REFERENCE_VAR 	
+					| LB POINTER_STATEMENT1RHS RB
+REFERENCE_VAR : AMPER VAR {/* | LB REFERENCE_VAR RB*/}
+POINTER_STATEMENT1RHS_ARTH : PLUS A_EXPN | MINUS A_EXPN
+
 LOGICAL_EXPN	: NOT LB LOGICAL_EXPN1 RB | LOGICAL_EXPN1
 LOGICAL_EXPN1	: LOGICAL_EXPN1 LOGICAL_OPERATOR LOGICAL_EXPN1 | LOGICAL_EXPN2 | NOT LB LOGICAL_EXPN1 RB 
 				| LB LOGICAL_EXPN1 RB
-LOGICAL_EXPN2	: A_EXPN COMP_OPERATOR A_EXPN { expn_type = -1;}
+LOGICAL_EXPN2	: LOGICAL_EXPN2_ARTH COMP_OPERATOR LOGICAL_EXPN2_ARTH
+LOGICAL_EXPN2_ARTH	: A_EXPN {
+						if (is_modulus){
+							if(expn_type!=0){
+								yyerror("Modulus operator reserved for integers."); exit(0);
+							}
+							is_modulus = 0;
+						}
+						expn_type = -1;
+					} 
 COMP_OPERATOR	: ET | GT | LT | GTE | LTE | NE
 LOGICAL_OPERATOR	: AMPER AMPER | OR
 
@@ -178,7 +212,7 @@ ARRAY_ACCESS	: ARRAY_ACCESS LSQRB VAR RSQRB {
 				}
 				| ARRAY_ACCESS LSQRB NUMBER RSQRB {
 					dims++;
-					//printf("<ARRAY_ACCESS LSQRB %d RSQRB>", number);
+					//printf("<ARRAY_ACCESS LSQRB %d RSQRB>", $3);
 				}
 				| LSQRB VAR RSQRB {
 					dims=0;
@@ -194,7 +228,7 @@ ARRAY_ACCESS	: ARRAY_ACCESS LSQRB VAR RSQRB {
 				| LSQRB NUMBER RSQRB{
 					dims=0;
 					dims++;
-					//printf("<LSQRB %d RSQRB>", number);
+					//printf("<LSQRB %d RSQRB>", $2);
 				}
 
 A_EXPN		:A_EXPN PLUS A_EXPN
@@ -210,7 +244,7 @@ A_EXPN2		:A_EXPN2 EXP A_EXPN2 |A_EXPN3
 
 A_EXPN3		: LB A_EXPN RB
 		| NUMBER {
-			//printf("%d", number);
+			//printf("%d", $1);
 			expn_type = 0;
 		}
 		| VAR UNARY_OPERATORS {

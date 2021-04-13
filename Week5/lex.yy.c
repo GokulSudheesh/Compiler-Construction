@@ -549,10 +549,8 @@ char *yytext;
 	#include"y.tab.h"
 	#include<math.h>
 	extern int var_count;
-	extern int number;
-
-#line 555 "lex.yy.c"
-#line 556 "lex.yy.c"
+#line 553 "lex.yy.c"
+#line 554 "lex.yy.c"
 
 #define INITIAL 0
 
@@ -769,9 +767,9 @@ YY_DECL
 		}
 
 	{
-#line 13 "projectMOD.l"
+#line 11 "projectMOD.l"
 
-#line 775 "lex.yy.c"
+#line 773 "lex.yy.c"
 
 	while ( /*CONSTCOND*/1 )		/* loops until end-of-file is reached */
 		{
@@ -840,244 +838,241 @@ do_action:	/* This label is used only to access EOF actions. */
 
 case 1:
 YY_RULE_SETUP
-#line 14 "projectMOD.l"
+#line 12 "projectMOD.l"
 {return INCLUDE;}
 	YY_BREAK
 case 2:
 YY_RULE_SETUP
-#line 15 "projectMOD.l"
+#line 13 "projectMOD.l"
 {return HEADER_FILE;}
 	YY_BREAK
 case 3:
 YY_RULE_SETUP
-#line 16 "projectMOD.l"
+#line 14 "projectMOD.l"
 {return IF;}
 	YY_BREAK
 case 4:
 YY_RULE_SETUP
-#line 17 "projectMOD.l"
+#line 15 "projectMOD.l"
 {return ELSE;}
 	YY_BREAK
 case 5:
 YY_RULE_SETUP
-#line 18 "projectMOD.l"
+#line 16 "projectMOD.l"
 {return FOR;}
 	YY_BREAK
 case 6:
 YY_RULE_SETUP
-#line 19 "projectMOD.l"
+#line 17 "projectMOD.l"
 {return DO;}
 	YY_BREAK
 case 7:
 YY_RULE_SETUP
-#line 20 "projectMOD.l"
+#line 18 "projectMOD.l"
 {return WHILE;}
 	YY_BREAK
 case 8:
 YY_RULE_SETUP
-#line 21 "projectMOD.l"
+#line 19 "projectMOD.l"
 {yylval.data_type=0;return INT;}
 	YY_BREAK
 case 9:
 YY_RULE_SETUP
-#line 22 "projectMOD.l"
+#line 20 "projectMOD.l"
 {yylval.data_type=1; return CHAR;}
 	YY_BREAK
 case 10:
 YY_RULE_SETUP
-#line 23 "projectMOD.l"
+#line 21 "projectMOD.l"
 {yylval.data_type=2; return FLOAT;}
 	YY_BREAK
 case 11:
 YY_RULE_SETUP
-#line 24 "projectMOD.l"
+#line 22 "projectMOD.l"
 {yylval.data_type=3; return DOUBLE;}
 	YY_BREAK
 case 12:
 YY_RULE_SETUP
-#line 25 "projectMOD.l"
+#line 23 "projectMOD.l"
 {return MAIN;}
 	YY_BREAK
 case 13:
 YY_RULE_SETUP
-#line 26 "projectMOD.l"
+#line 24 "projectMOD.l"
 {return HASH;}
 	YY_BREAK
 case 14:
 YY_RULE_SETUP
-#line 27 "projectMOD.l"
+#line 25 "projectMOD.l"
 {return LB;}
 	YY_BREAK
 case 15:
 YY_RULE_SETUP
-#line 28 "projectMOD.l"
+#line 26 "projectMOD.l"
 {return RB;}
 	YY_BREAK
 case 16:
 YY_RULE_SETUP
-#line 29 "projectMOD.l"
+#line 27 "projectMOD.l"
 {return LCB;}
 	YY_BREAK
 case 17:
 YY_RULE_SETUP
-#line 30 "projectMOD.l"
+#line 28 "projectMOD.l"
 {return RCB;}
 	YY_BREAK
 case 18:
 YY_RULE_SETUP
-#line 31 "projectMOD.l"
+#line 29 "projectMOD.l"
 {return LSQRB;}
 	YY_BREAK
 case 19:
 YY_RULE_SETUP
-#line 32 "projectMOD.l"
+#line 30 "projectMOD.l"
 {return RSQRB;}
 	YY_BREAK
 case 20:
 YY_RULE_SETUP
-#line 33 "projectMOD.l"
+#line 31 "projectMOD.l"
 {return COMA;}
 	YY_BREAK
 case 21:
 YY_RULE_SETUP
-#line 34 "projectMOD.l"
+#line 32 "projectMOD.l"
 {return SC;}
 	YY_BREAK
 case 22:
 YY_RULE_SETUP
-#line 35 "projectMOD.l"
+#line 33 "projectMOD.l"
 {return COLON;}
 	YY_BREAK
 case 23:
 YY_RULE_SETUP
-#line 36 "projectMOD.l"
+#line 34 "projectMOD.l"
 {return QMARK;}
 	YY_BREAK
 case 24:
 YY_RULE_SETUP
-#line 37 "projectMOD.l"
+#line 35 "projectMOD.l"
 {return UPLUS;}
 	YY_BREAK
 case 25:
 YY_RULE_SETUP
-#line 38 "projectMOD.l"
+#line 36 "projectMOD.l"
 {return UMINUS;}
 	YY_BREAK
 case 26:
 YY_RULE_SETUP
-#line 39 "projectMOD.l"
+#line 37 "projectMOD.l"
 {return EXP;}
 	YY_BREAK
 case 27:
 YY_RULE_SETUP
-#line 40 "projectMOD.l"
+#line 38 "projectMOD.l"
 {return PLUS;}
 	YY_BREAK
 case 28:
 YY_RULE_SETUP
-#line 41 "projectMOD.l"
+#line 39 "projectMOD.l"
 {return MINUS;}
 	YY_BREAK
 case 29:
 YY_RULE_SETUP
-#line 42 "projectMOD.l"
+#line 40 "projectMOD.l"
 {return MUL;}
 	YY_BREAK
 case 30:
 YY_RULE_SETUP
-#line 43 "projectMOD.l"
+#line 41 "projectMOD.l"
 {return DIV;}
 	YY_BREAK
 case 31:
 YY_RULE_SETUP
-#line 44 "projectMOD.l"
+#line 42 "projectMOD.l"
 {return MOD;}
 	YY_BREAK
 case 32:
 YY_RULE_SETUP
-#line 45 "projectMOD.l"
+#line 43 "projectMOD.l"
 {return ET;}
 	YY_BREAK
 case 33:
 YY_RULE_SETUP
-#line 46 "projectMOD.l"
+#line 44 "projectMOD.l"
 {return EQ;}
 	YY_BREAK
 case 34:
 YY_RULE_SETUP
-#line 47 "projectMOD.l"
+#line 45 "projectMOD.l"
 {return GT;}
 	YY_BREAK
 case 35:
 YY_RULE_SETUP
-#line 48 "projectMOD.l"
+#line 46 "projectMOD.l"
 {return LT;}
 	YY_BREAK
 case 36:
 YY_RULE_SETUP
-#line 49 "projectMOD.l"
+#line 47 "projectMOD.l"
 {return GTE;}
 	YY_BREAK
 case 37:
 YY_RULE_SETUP
-#line 50 "projectMOD.l"
+#line 48 "projectMOD.l"
 {return LTE;}
 	YY_BREAK
 case 38:
 YY_RULE_SETUP
-#line 51 "projectMOD.l"
+#line 49 "projectMOD.l"
 {return NE;}
 	YY_BREAK
 case 39:
 YY_RULE_SETUP
-#line 52 "projectMOD.l"
+#line 50 "projectMOD.l"
 {return AND;}
 	YY_BREAK
 case 40:
 YY_RULE_SETUP
-#line 53 "projectMOD.l"
+#line 51 "projectMOD.l"
 {return OR;}
 	YY_BREAK
 case 41:
 YY_RULE_SETUP
-#line 54 "projectMOD.l"
+#line 52 "projectMOD.l"
 {return NOT;}
 	YY_BREAK
 case 42:
 YY_RULE_SETUP
-#line 55 "projectMOD.l"
+#line 53 "projectMOD.l"
 {return DQUOTE;}
 	YY_BREAK
 case 43:
 YY_RULE_SETUP
-#line 56 "projectMOD.l"
+#line 54 "projectMOD.l"
 {strcpy(yylval.var_name,yytext);return VAR;}
 	YY_BREAK
 case 44:
 YY_RULE_SETUP
-#line 57 "projectMOD.l"
-{
-           number=atoi(yytext);
-           return NUMBER;
-      	}
+#line 55 "projectMOD.l"
+{yylval.integer_val = atoi(yytext); return NUMBER;}
 	YY_BREAK
 case 45:
 /* rule 45 can match eol */
 YY_RULE_SETUP
-#line 61 "projectMOD.l"
+#line 56 "projectMOD.l"
 {/*new line or space*/}
 	YY_BREAK
 case 46:
 YY_RULE_SETUP
-#line 62 "projectMOD.l"
+#line 57 "projectMOD.l"
 {printf("invalid character sequence %s\n",yytext); exit(0);}
 	YY_BREAK
 case 47:
 YY_RULE_SETUP
-#line 63 "projectMOD.l"
+#line 58 "projectMOD.l"
 ECHO;
 	YY_BREAK
-#line 1081 "lex.yy.c"
+#line 1076 "lex.yy.c"
 case YY_STATE_EOF(INITIAL):
 	yyterminate();
 
@@ -2094,7 +2089,7 @@ void yyfree (void * ptr )
 
 #define YYTABLES_NAME "yytables"
 
-#line 63 "projectMOD.l"
+#line 58 "projectMOD.l"
 
 
 
