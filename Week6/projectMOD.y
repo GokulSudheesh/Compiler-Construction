@@ -8,6 +8,7 @@
 	int success = 1;
 	int current_data_type;
 	int expn_type=-1;
+	int expn_type_temp=-1;
 	int is_modulus = 0;
 	int is_Array;
 	int temp;
@@ -40,6 +41,7 @@ int integer_val;
 %token<var_name>VAR
 %token<integer_val>NUMBER
 %type<data_type>DATA_TYPE
+%type<var_name>VAR_ARRAY_ACCESS_LHS
 
 %start prm
 
@@ -167,17 +169,18 @@ VAR_EXPN1	: VAR EQ A_EXPN {
 					check_EXPNtype_lhs($1);
 			}
 			| VAR_ARRAY_ACCESS_LHS EQ A_EXPN {
-					//printf("<VAR_ARRAY_ACCESS_LHS EQ A_EXPN SC>");					
+					//printf("<VAR_ARRAY_ACCESS_LHS EQ A_EXPN SC>");
+					check_EXPNtype_lhs($1);					
 			}
 
 VAR_EXPN2	: VAR ARRAY_ACCESS UNARY_OPERATORS {
-				if(dims!=get_array_dimensions($1)){
-					printf("\n Error: Indexing error in array: %s\n", $1);
-					exit(0);
-				}
 				if(lookup_in_table($1)==-1){
 					printf("\n variable \"%s\" undeclared\n",$1);exit(0);
 				}
+				if(dims!=get_array_dimensions($1)){
+					printf("\n Error: Indexing error in array: %s\n", $1);
+					exit(0);
+				}				
 			} 
 			| VAR UNARY_OPERATORS {
 				if(lookup_in_table($1)==-1){
@@ -186,7 +189,7 @@ VAR_EXPN2	: VAR ARRAY_ACCESS UNARY_OPERATORS {
 			}
 
 VAR_ARRAY_ACCESS_LHS	: VAR ARRAY_ACCESS {
-					check_EXPNtype_lhs($1);
+					strcpy($$,$1);
 					if(dims!=get_array_dimensions($1)){
 						printf("\n Error: Indexing error in array: %s\n", $1);
 						exit(0);
@@ -199,36 +202,34 @@ VAR_ARRAY_ACCESS_RHS	: VAR ARRAY_ACCESS {
 							exit(0);
 						}						
 				}
-ARRAY_ACCESS	: ARRAY_ACCESS LSQRB VAR RSQRB {
+ARRAY_ACCESS	: ARRAY_ACCESS LSQRB {expn_type_temp = expn_type; expn_type = -1;} A_EXPN RSQRB {
 					dims++;
-					//printf("<ARRAY_ACCESS LSQRB %s RSQRB>", $3);
-					if(lookup_in_table($3)==-1){
-						printf("\n variable \"%s\" undeclared\n",$3); exit(0);
+					//printf("<ARRAY_ACCESS LSQRB %s RSQRB>");
+					if (is_modulus){
+						if(expn_type!=0){
+							yyerror("Modulus operator reserved for integers."); exit(0);
+						}
+						is_modulus = 0;
 					}
-					if(lookup_in_table($3)!=0){
+					if(expn_type!=0 && expn_type!=-1){
 						yyerror("\nError: Arrays must be indexed by int values."); exit(0);
 					}
-
+					expn_type = expn_type_temp;
 				}
-				| ARRAY_ACCESS LSQRB NUMBER RSQRB {
-					dims++;
-					//printf("<ARRAY_ACCESS LSQRB %d RSQRB>", $3);
-				}
-				| LSQRB VAR RSQRB {
+				| LSQRB {expn_type_temp = expn_type; expn_type = -1;} A_EXPN RSQRB {
 					dims=0;
 					dims++;
-					//printf("<LSQRB %s RSQRB>", $2);
-					if(lookup_in_table($2)==-1){
-						printf("\n variable \"%s\" undeclared\n",$2); exit(0);
+					//printf("<LSQRB %s RSQRB>");
+					if (is_modulus){
+						if(expn_type!=0){
+							yyerror("Modulus operator reserved for integers."); exit(0);
+						}
+						is_modulus = 0;
 					}
-					if(lookup_in_table($2)!=0){
-						yyerror("\nArrays must be indexed by int values."); exit(0);
+					if(expn_type!=0 && expn_type!=-1){
+						yyerror("\nError: Arrays must be indexed by int values."); exit(0);
 					}
-				}
-				| LSQRB NUMBER RSQRB{
-					dims=0;
-					dims++;
-					//printf("<LSQRB %d RSQRB>", $2);
+					expn_type = expn_type_temp;
 				}
 
 A_EXPN	: A_EXPN PLUS A_EXPN
@@ -238,10 +239,7 @@ A_EXPN	: A_EXPN PLUS A_EXPN
 		| A_EXPN MOD A_EXPN {is_modulus = 1;}
 		| A_EXPN EXP A_EXPN 
 		| LB A_EXPN RB
-		| NUMBER {
-			//printf("%d", $1);
-			expn_type = 0;
-		}
+		| NUMBER {expn_type = 0;}
 		| VAR UNARY_OPERATORS {
 			check_EXPNtype_rhs($1);
 		}
@@ -344,14 +342,16 @@ void insert_to_table(char var[30], int type)
 }
 int get_array_dimensions(char var[30])
 {
-	for(int i=0; i<=var_count; i++)
-	{
-		if(strcmp(var_list[i].var_name, var)==0)
+	if (lookup_in_table(var)!=-1){
+		for(int i=0; i<=var_count; i++)
 		{
-			return var_list[i].dim;
+			if(strcmp(var_list[i].var_name, var)==0)
+			{
+				return var_list[i].dim;
+			}
 		}
 	}
-	return -1;
+	printf("\n variable \"%s\" undeclared\n",var);exit(0);
 }
 void display_symbol_table(){
 	printf("\nSYMBOL TABLE\n");
