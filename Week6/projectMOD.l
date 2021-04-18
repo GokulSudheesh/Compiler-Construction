@@ -51,6 +51,7 @@
 "||" {return OR;}
 "!" {return NOT;}
 [\"] {return DQUOTE;}
+\/\/(.*) {/*Single line comment*/};	
 ([A-Z]+|[a-z]+)([A-Z]+|[a-z]+|[0-9]+)* {strcpy(yylval.var_name,yytext);return VAR;}
 [0-9]+ {yylval.integer_val = atoi(yytext); return NUMBER;}
 [\n\t ]+  {/*new line or space*/}
