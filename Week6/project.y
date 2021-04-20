@@ -7,12 +7,9 @@
 	int yylineno;
 	int success = 1;
 	int current_data_type;
-	int expn_type=-1;
-	int expn_type_temp=-1;
 	int is_modulus = 0;
-	int isValue = 1;
+	char current_operator;
 	int is_Array;
-	int temp;
 	int dims;
 	int array_dim[5];
 	int ptr_depth;
@@ -22,8 +19,6 @@
 	extern int lookup_in_table(char var[30]);
 	extern void insert_to_table(char var[30], int type);
 	extern int get_array_dimensions(char var[30]);
-	void check_EXPNtype_rhs(char var[30]);
-	void check_EXPNtype_lhs(char var[30]);
 %}
 
 %union{
@@ -32,8 +27,9 @@ char var_name[30];
 int integer_val;
 struct 
 	{
-		int  data_depth;
+		char var_name[30];
 		int type;
+		int  data_depth;
 		int isValue;
 	}EXPN_type;
 }
@@ -52,10 +48,9 @@ struct
 %token<var_name>VAR
 %token<integer_val>NUMBER
 %type<data_type>DATA_TYPE
-%type<var_name>VAR_ARRAY_ACCESS_LHS
-%type<var_name>VAR_ARRAY_ACCESS_RHS
 %type<EXPN_type>A_EXPN
-%type<EXPN_type>POINTER_STATEMENTS_LHS
+%type<EXPN_type>ARRAY_ACCESS
+%type<EXPN_type>INCR_DCR_EXPN
 
 %start prm
 
@@ -76,7 +71,7 @@ VAR_LIST : VAR COMA VAR_LIST {
 	| ARRAY_DECLARATION COMA VAR_LIST {
 		//printf("<ARRAY_DECLARATION COMA VAR_LIST>");
 	}
-	| PTR_VAR VAR_LIST
+	| PTR_VAR COMA VAR_LIST
 	| VAR {
 		insert_to_table($1,current_data_type);
 	      }
@@ -131,354 +126,204 @@ DATA_TYPE : INT {
 			current_data_type=$1;
 		}
  
-PROGRAM_STATEMENTS :	VAR_EXPN1 SC
+PROGRAM_STATEMENTS :	ASSIGNMENT_STATEMENT SC
 				| SC
-				| VAR_EXPN2 SC
-				| POINTER_STATEMENTS SC
+				| INCR_DCR_EXPN SC
 				| LB LOGICAL_EXPN RB QMARK LCB BODY2 RCB COLON LCB BODY2 RCB 
 				| IF LB LOGICAL_EXPN RB LCB BODY2 RCB
 				| IF LB LOGICAL_EXPN RB LCB BODY2 RCB ELSE LCB BODY2 RCB
 				| WHILE LB LOGICAL_EXPN RB LCB BODY2 RCB
 				| DO LCB BODY2 RCB WHILE LB LOGICAL_EXPN RB SC
-				| FOR LB VAR_EXPN1 SC LOGICAL_EXPN SC VAR_EXPN2 RB LCB BODY2 RCB
+				| FOR LB ASSIGNMENT_STATEMENT SC LOGICAL_EXPN SC INCR_DCR_EXPN RB LCB BODY2 RCB
 
-POINTER_STATEMENTS : POINTER_STATEMENTS_LHS EQ A_EXPN{
-						if($1.type!=$3.type)
-						{
-							yyerror("\ntype mismatch in the expression\n");
-							exit(0);
-						}else if($1.data_depth!=$3.data_depth)
-						{
-							printf("\n Line number: %d Warning : Incompatible pointer type in assignment",yylineno);
-						}
-						else if($1.isValue==1)
-						{
-							yyerror("lvalue required as left operand of the assignment operator");
-							exit(0);
-						}
-						if (is_modulus){
-							if(expn_type!=0){
-								yyerror("Modulus operator reserved for integers."); exit(0);
-							}	
-							is_modulus = 0;
-						}
-						expn_type = -1;
+ASSIGNMENT_STATEMENT : A_EXPN EQ A_EXPN
+				{
+					if($1.type!=$3.type)
+					{
+						yyerror("Incompatible type in assignment");
+						exit(0);
+					}else if($1.data_depth!=$3.data_depth)
+					{
+						//yyerror("Incompatible pointer type in assignment");
+						//exit(0);
+						printf("\n Line number: %d Warning : Incompatible pointer type in assignment",yylineno);
 					}
-POINTER_STATEMENTS_LHS	: MUL A_EXPN {
-							if($2.data_depth==0)
-							{
-								yyerror("Invalid operand to unary \'*\' operator");
-								exit(0);
-							}
-							if(isValue){
-								yyerror("lvalue required as left operand of the assignment operator");
-								exit(0);
-							}
-							else
-							{
-								$$.type=$2.type;
-								$$.data_depth=$2.data_depth-1;
-								$$.isValue=0;
-							}
-							expn_type = -1;
-						}
+					else if($1.isValue==1)
+					{
+						yyerror("lvalue required as left operand of the assignment operator");
+						exit(0);
+					}	
+				}
+
 LOGICAL_EXPN	: NOT LB LOGICAL_EXPN1 RB | LOGICAL_EXPN1
 LOGICAL_EXPN1	: LOGICAL_EXPN1 LOGICAL_OPERATOR LOGICAL_EXPN1 | LOGICAL_EXPN2 | NOT LB LOGICAL_EXPN1 RB 
 				| LB LOGICAL_EXPN1 RB
-LOGICAL_EXPN2	: LOGICAL_EXPN2_ARTH COMP_OPERATOR LOGICAL_EXPN2_ARTH
-LOGICAL_EXPN2_ARTH	: A_EXPN {
-						if (is_modulus){
-							if(expn_type!=0){
-								yyerror("Modulus operator reserved for integers."); exit(0);
-							}
-							is_modulus = 0;
-						}
-						expn_type = -1;
-					} 
+LOGICAL_EXPN2	: A_EXPN COMP_OPERATOR A_EXPN
 COMP_OPERATOR	: ET | GT | LT | GTE | LTE | NE
 LOGICAL_OPERATOR	: AMPER AMPER | OR
 
-VAR_EXPN1	: VAR EQ A_EXPN {	
-					check_EXPNtype_lhs($1);
-			}
-			| VAR_ARRAY_ACCESS_LHS EQ A_EXPN {
-					//printf("<VAR_ARRAY_ACCESS_LHS EQ A_EXPN SC>");
-					check_EXPNtype_lhs($1);					
-			}
-
-VAR_EXPN2	: VAR ARRAY_ACCESS UNARY_OPERATORS {
-				if(lookup_in_table($1)==-1){
-					printf("\n variable \"%s\" undeclared\n",$1);exit(0);
-				}
-				if(dims!=get_array_dimensions($1)){
-					printf("\n Error: Indexing error in array: %s\n", $1);
-					exit(0);
-				}				
-			} 
-			| VAR UNARY_OPERATORS {
-				if(lookup_in_table($1)==-1){
-					printf("\n variable \"%s\" undeclared\n",$1);exit(0);
-				}
-			}
-
-VAR_ARRAY_ACCESS_LHS	: VAR ARRAY_ACCESS {
-					strcpy($$,$1);
-					if(get_array_dimensions($1)==0){
-						yyerror("Subscripted value neither array nor pointer");
-						exit(0);
-					}
-					if(dims!=get_array_dimensions($1)){
-						printf("\n Error: Indexing error in array: %s\n", $1);
-						exit(0);
-					}					
-				}
-VAR_ARRAY_ACCESS_RHS	: VAR ARRAY_ACCESS {
-						check_EXPNtype_rhs($1);
-						strcpy($$,$1);
-						if(get_array_dimensions($1)==0){
-							yyerror("Subscripted value neither array nor pointer");
-							exit(0);
+A_EXPN	: A_EXPN OPR_PREC1 A_EXPN	
+				{	
+					$$.isValue=1;
+					if($1.data_depth==$3.data_depth)
+					{
+						$$.data_depth=$1.data_depth;
+						if($1.type==$3.type)
+						{
+							$$.type=$1.type;
+						}else
+						{
+							yyerror("Type mismatch in operands");
+							exit(0);	
 						}
-						if(dims!=get_array_dimensions($1)){
-							printf("\n Error: Indexing error in array: %s\n", $1);
-							exit(0);
-						}						
+					}
+					else if($1.data_depth==0)
+					{	
+						if($1.type==0)
+						{	$$.data_depth=$3.data_depth;
+							$$.type=$3.type;
+						}
+					}
+					else if($3.data_depth==0)
+					{	
+						if($3.type==0)
+						{	$$.data_depth=$1.data_depth;
+							$$.type=$1.type;
+						}
+					}
+					else
+					{
+						yyerror("Type mismatch in dereferencing operands");
+						exit(0);						
+					}
 				}
-ARRAY_ACCESS	: ARRAY_ACCESS LSQRB {expn_type_temp = expn_type; expn_type = -1;} A_EXPN RSQRB {
-					dims++;
-					//printf("<ARRAY_ACCESS LSQRB %s RSQRB>");
-					if (is_modulus){
-						if(expn_type!=0){
+
+		|A_EXPN OPR_PREC2 A_EXPN
+				{
+					if($1.type!=$3.type)
+					{
+						yyerror("Type mismatch in operands");exit(0);
+					}
+					if(is_modulus){
+						if($1.type!=0 || $3.type!=0){
 							yyerror("Modulus operator reserved for integers."); exit(0);
 						}
 						is_modulus = 0;
 					}
-					if($4.data_depth!=0 || $4.type!=0){
-						yyerror("\nError: Arrays must be indexed by int values."); exit(0);
-					}
-					expn_type = expn_type_temp;
+					if($1.data_depth!=0 || $3.data_depth!=0)
+					{
+						printf("\nInvalid operands to binary %c", current_operator);exit(0);
+					}	
+					$$.isValue=1;
+					$$.data_depth=0;
+					$$.type=$1.type;	
 				}
-				| LSQRB {expn_type_temp = expn_type; expn_type = -1;} A_EXPN RSQRB {
-					dims=0;
-					dims++;
-					//printf("<LSQRB %s RSQRB>");
-					if (is_modulus){
-						if(expn_type!=0){
-							yyerror("Modulus operator reserved for integers."); exit(0);
-						}
-						is_modulus = 0;
-					}
-					if($3.data_depth!=0 || $3.type!=0){
-						yyerror("\nError: Arrays must be indexed by int values."); exit(0);
-					}
-					expn_type = expn_type_temp;
-				}
-
-A_EXPN	: A_EXPN PLUS A_EXPN{
-			$$.isValue=1;
-			isValue=1;
-			if($1.data_depth==$3.data_depth)
-			{
-				$$.data_depth=$1.data_depth;
-				$$.type=$1.type;
-			}
-			else if($1.data_depth==0)
-			{	
-				if($1.type==0)
-				{	$$.data_depth=$3.data_depth;
-					$$.type=$3.type;
-				}
-			}
-			else if($3.data_depth==0)
-			{	
-				if($3.type==0)
-				{	$$.data_depth=$1.data_depth;
-					$$.type=$1.type;
-				}
-			}
-			else
-			{
-				yyerror("Type mismatch in dereferencing operands");
-				exit(0);						
-			}
-		}
-		| A_EXPN MINUS A_EXPN{
-			$$.isValue=1;
-			isValue=1;
-			if($1.data_depth==$3.data_depth)
-			{
-				$$.data_depth=$1.data_depth;
-				$$.type=$1.type;
-			}
-			else if($1.data_depth==0)
-			{	
-				if($1.type==0)
-				{	$$.data_depth=$3.data_depth;
-					$$.type=$3.type;
-				}
-			}
-			else if($3.data_depth==0)
-			{	
-				if($3.type==0)
-				{	$$.data_depth=$1.data_depth;
-					$$.type=$1.type;
-				}
-			}
-			else
-			{
-				yyerror("Type mismatch in dereferencing operands");
-				exit(0);						
-			}
-		}
-		| A_EXPN MUL A_EXPN{
-			if($1.data_depth!=0 || $3.data_depth!=0)
-			{
-				yyerror("Invalid operands to binary operator *");exit(0);	
-			}	
-			$$.isValue = 1;
-			isValue=1;
-			$$.data_depth = 0;
-			$$.type = $1.type;
-		}
-		| A_EXPN DIV A_EXPN{
-			if($1.data_depth!=0 || $3.data_depth!=0)
-			{
-				yyerror("Invalid operands to binary operator /");exit(0);	
-			}	
-			$$.isValue = 1;
-			isValue=1;
-			$$.data_depth = 0;
-			$$.type = $1.type;
-		} 
-		| A_EXPN MOD A_EXPN {
-			is_modulus = 1;
-			if($1.data_depth!=0 || $3.data_depth!=0)
-			{
-				yyerror("Invalid operands to binary operator %");exit(0);	
-			}	
-			$$.isValue = 1;
-			isValue=1;
-			$$.data_depth = 0;
-			$$.type = $1.type;
-		}
-		| A_EXPN EXP A_EXPN {
-			if($1.data_depth!=0 || $3.data_depth!=0)
-			{
-				yyerror("Invalid operands to binary operator ^");exit(0);	
-			}	
-			$$.isValue = 1;
-			isValue=1;
-			$$.data_depth = 0;
-			$$.type = $1.type;
-		}
 		| LB A_EXPN RB {
-			isValue = 0;//only for pointers
 			$$.isValue = $2.isValue;
 			$$.data_depth = $2.data_depth;
 			$$.type = $2.type;
+		}		
+		| INCR_DCR_EXPN {
+			$$.type=$1.type;
+			$$.data_depth=$1.data_depth;	
+			$$.isValue=1;
 		}
-		| NUMBER {
-			expn_type = 0;
-			$$.type = 0;
-			$$.data_depth = 0;	
-			$$.isValue = 1;
-		}
-		| A_EXPN UNARY_OPERATORS {
-			if($$.isValue==1)
-			{
-				yyerror("lvalue required");exit(0);
-			}else
-			{
-				$$.type=$1.type;
-				$$.data_depth=$1.data_depth;	
-				$$.isValue=1;
-				isValue=1;
-			}
-		}
-		| VAR {		
-			isValue = 0;//only for pointers	
+		| VAR {
 			struct symbol_table column = get_column($1);
 			$$.type = column.type;
 			$$.data_depth = column.pointerDepth;
 			$$.isValue = 0;
-			if (column.pointerDepth==0){
-				check_EXPNtype_rhs($1);
-			}
+			strcpy($$.var_name, $1);
 		}
-		| MUL A_EXPN {
-			if($2.data_depth==0)
+		| NUMBER {
+			$$.type = 0;
+			$$.data_depth = 0;	
+			$$.isValue = 1;
+		}
+		| MUL A_EXPN
 			{
-				yyerror("Invalid operand to unary \'*\' operator");
-				exit(0);
+				if($2.data_depth==0)
+				{
+					yyerror("Invalid operand to unary \'*\' operator");
+					exit(0);
+				}
+				else
+				{
+					$$.type=$2.type;
+					$$.data_depth=$2.data_depth-1;
+					$$.isValue=0;
+				}										
 			}
-			else
-			{
+		| ARRAY_ACCESS {
+			if(dims!=get_array_dimensions($1.var_name)){
+				printf("\n Error: Indexing error in array: %s\n", $1.var_name);exit(0);
+			}
+			$$.type=$1.type;
+			$$.data_depth=$1.data_depth;
+			$$.isValue=0;
+			dims=0;
+		}			
+		| AMPER A_EXPN	
+			{		
+				if($2.isValue==1)
+				{
+					yyerror("lvalue required for unary operator &");
+					exit(0);
+				}
 				$$.type=$2.type;
-				$$.data_depth=$2.data_depth-1;
-				$$.isValue=0;
-			}	
-		}
-		| VAR_ARRAY_ACCESS_RHS {
-			struct symbol_table column = get_column($1);
-			$$.type = column.type;
-			$$.data_depth = column.pointerDepth-dims;
-			$$.isValue = 0;
-		}
-		| AMPER A_EXPN {
-			if($2.isValue){
-				yyerror("lvalue required for unary operator &");exit(0);
+				$$.data_depth=$2.data_depth+1;
+				$$.isValue=1;						
 			}
-			$$.type=$2.type;
-			$$.data_depth=$2.data_depth+1;
-			$$.isValue=1;
-		}
+
+ARRAY_ACCESS : ARRAY_ACCESS LSQRB A_EXPN RSQRB
+			{	
+				dims++;
+				if($3.data_depth!=0 || $3.type!=0)
+				{
+					yyerror("Array index integer expected\n");
+					exit(0);
+				}
+				else if($1.data_depth==0)
+				{
+					yyerror("Subscripted value neither array nor pointer");
+					exit(0);
+				}
+				else
+				{
+					$$.type=$1.type;
+					$$.data_depth=$1.data_depth-1;
+					$$.isValue=0;
+					strcpy($$.var_name, $1.var_name);
+				}
+			}
+			| VAR {
+				struct symbol_table column = get_column($1);
+				$$.type = column.type;
+				$$.data_depth = column.pointerDepth;
+				$$.isValue = 0;
+				strcpy($$.var_name, $1);
+			}
+
+INCR_DCR_EXPN : A_EXPN UNARY_OPERATORS {
+				if($$.isValue==1)
+				{
+					yyerror("lvalue required");exit(0);
+				}else
+				{
+					$$.type=$1.type;
+					$$.data_depth=$1.data_depth;	
+					$$.isValue=1;
+				}
+			}
 
 UNARY_OPERATORS: UPLUS | UMINUS
+OPR_PREC1: PLUS | MINUS
+OPR_PREC2: DIV {current_operator='/';} 
+		| MUL {current_operator='*';} 
+		| EXP {current_operator='^';} 
+		| MOD {current_operator='%'; is_modulus = 1;}
 
 %%
-
-void check_EXPNtype_lhs(char var[30])
-{
-	if((temp=lookup_in_table(var))!=-1)
-	{
-		if (is_modulus){
-			if(expn_type!=0 && temp!=0){
-				yyerror("Modulus operator reserved for integers."); exit(0);
-			}
-			is_modulus = 0;
-		}
-		if(expn_type==-1)
-		{
-			expn_type=temp;
-		}else if(expn_type!=temp)
-		{
-			yyerror("\ntype mismatch in the expression\n");
-			exit(0);
-		}
-	}else
-	{
-		printf("\n variable \"%s\" undeclared\n",var);exit(0);
-	}
-	expn_type=-1;
-}
-
-void check_EXPNtype_rhs(char var[30])
-{
-	if((temp=lookup_in_table(var))!=-1)
-	{		
-		if(expn_type==-1)
-		{
-			expn_type=temp;
-		}else if(expn_type!=temp)
-		{
-			yyerror("\ntype mismatch in the expression\n");
-			exit(0);
-		}
-	}else
-	{
-		printf("\n variable \"%s\" undeclared\n",var);exit(0);
-	}	
-}
 
 struct symbol_table get_column(char var[30]){
     if(lookup_in_table(var)!=-1){
@@ -522,6 +367,7 @@ void insert_to_table(char var[30], int type)
 				//printf("\n%d\n",var_list[var_count].dim_bounds[i]);
 			}
 			is_Array=0;
+			dims = 0;
 		}
 		else{
 			var_list[var_count].dim = 0;
@@ -555,16 +401,17 @@ int get_array_dimensions(char var[30])
 	printf("\n variable \"%s\" undeclared\n",var);exit(0);
 }
 void display_symbol_table(){
-	printf("\nSYMBOL TABLE\n");
-	printf("Var name\tType\tPtrDepth\tDim\tDim Bounds\n");
+	printf("\n+------------------------------SYMBOL TABLE------------------------------+\n");
+	printf("|Var name\t\tType\tPtrDepth\tDim\tDim Bounds\t |\n");
 	for(int i=0; i<=var_count; i++)
 	{
-		printf("%s\t\t%d\t%d\t\t%d\t{", var_list[i].var_name, var_list[i].type, var_list[i].pointerDepth, var_list[i].dim);
+		printf("|%s\t\t\t%d\t%d\t\t%d\t{", var_list[i].var_name, var_list[i].type, var_list[i].pointerDepth, var_list[i].dim);
 		for(int j=0; j<5; j++){
 			printf("%d ",var_list[i].dim_bounds[j]);
 		}
-		printf("}\n");
+		printf("}|\n");
 	}
+	printf("+------------------------------------------------------------------------+\n");
 }
 int main()
 {

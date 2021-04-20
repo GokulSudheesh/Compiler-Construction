@@ -145,19 +145,20 @@ extern int yydebug;
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
 union YYSTYPE
 {
-#line 29 "projectMOD.y"
+#line 24 "project.y"
 
 int data_type;
 char var_name[30];
 int integer_val;
 struct 
 	{
-		int  data_depth;
+		char var_name[30];
 		int type;
+		int  data_depth;
 		int isValue;
 	}EXPN_type;
 
-#line 161 "y.tab.h"
+#line 162 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
