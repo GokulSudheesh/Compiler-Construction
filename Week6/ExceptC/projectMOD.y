@@ -72,6 +72,7 @@ VAR_LIST : VAR COMA VAR_LIST {
 PTR_VAR :	PTR_DEPTH VAR {
 				//printf("<PTR_DEPTH VAR>");
 				insert_to_table($2,current_data_type);
+				ptr_depth = 0;
 			}
 PTR_DEPTH :	MUL PTR_DEPTH {
 				//printf("<MUL PTR_DEPTH>");
