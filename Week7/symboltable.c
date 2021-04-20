@@ -6,8 +6,9 @@ int dims;
 int array_dim[]={-1,-1,-1,-1,-1};
 int ptr_depth;
 struct symbol_table get_column(char var[30]);
-extern int lookup_in_table(char var[30]);
+extern int lookup_in_table(char var[30], int mode);
 extern void insert_to_table(char var[30], int type);
+extern int get_array_dimensions(char var[30]);
 
 struct symbol_table{char var_name[30]; int type; int dim; int pointerDepth; int dim_bounds[5];};
 struct symbol_table_stack{
@@ -46,7 +47,7 @@ void pop_table(){
 
 struct symbol_table get_column(char var[30]){
     struct symbol_table_stack * current = pointer;
-    if(lookup_in_table(var)!=-1){        
+    if(lookup_in_table(var,0)!=-1){        
         while(current != NULL){
             for(int i=0; i<=current->var_count; i++)
             {
@@ -64,7 +65,7 @@ struct symbol_table get_column(char var[30]){
 	return current->var_list[0];
 }
 
-int lookup_in_table(char var[30])
+int lookup_in_table(char var[30], int mode) //mode (0->check all nodes) (1->check current node) 
 {
     struct symbol_table_stack * current = pointer;
     while(current != NULL){
@@ -75,6 +76,9 @@ int lookup_in_table(char var[30])
                 return current->var_list[i].type;
             }
         }
+        if(mode == 1){
+            return -1;
+        }
         current = current->prev; 
     }    
 	return -1;
@@ -82,7 +86,7 @@ int lookup_in_table(char var[30])
 
 void insert_to_table(char var[30], int type)
 {
-	if (lookup_in_table(var) == -1)
+	if (lookup_in_table(var,1) == -1)
 	{
 		pointer->var_count++;
 		strcpy(pointer->var_list[pointer->var_count].var_name, var);
@@ -111,6 +115,22 @@ void insert_to_table(char var[30], int type)
     {
         printf("\nmultiple declaration of variable: %s", var);
     }
+}
+
+int get_array_dimensions(char var[30])
+{
+    struct symbol_table_stack * current = pointer;
+    while(current != NULL){
+        for(int i=0; i<=current->var_count; i++)
+        {
+            if(strcmp(current->var_list[i].var_name, var)==0)
+            {
+                return current->var_list[i].dim;
+            }
+        }
+        current = current->prev;
+    }
+	printf("\n variable \"%s\" undeclared\n",var);exit(0);
 }
 
 void display_symbol_table(){
