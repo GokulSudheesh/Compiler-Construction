@@ -1,5 +1,5 @@
-State 140 conflicts: 2 shift/reduce
-State 158 conflicts: 2 reduce/reduce
+State 141 conflicts: 2 shift/reduce
+State 159 conflicts: 2 reduce/reduce
 
 
 Grammar
@@ -28,7 +28,7 @@ Grammar
 
    14 VAR_LIST: VAR COMA VAR_LIST
    15         | ARRAY_DECLARATION COMA VAR_LIST
-   16         | PTR_VAR VAR_LIST
+   16         | PTR_VAR COMA VAR_LIST
    17         | VAR
    18         | ARRAY_DECLARATION
    19         | PTR_VAR
@@ -140,7 +140,7 @@ Terminals, with rules where they appear
     SC (268) 13 31 32 33 34 39 40
     COLON (269) 35
     QMARK (270) 35
-    COMA (271) 14 15
+    COMA (271) 14 15 16
     IF (272) 36 37
     ELSE (273) 37
     FOR (274) 40
@@ -778,18 +778,12 @@ State 50
 
 State 51
 
-   16 VAR_LIST: PTR_VAR . VAR_LIST
+   16 VAR_LIST: PTR_VAR . COMA VAR_LIST
    19         | PTR_VAR .
 
-    MUL  shift, and go to state 48
-    VAR  shift, and go to state 49
+    COMA  shift, and go to state 90
 
     $default  reduce using rule 19 (VAR_LIST)
-
-    VAR_LIST           go to state 90
-    PTR_VAR            go to state 51
-    PTR_DEPTH          go to state 52
-    ARRAY_DECLARATION  go to state 53
 
 
 State 52
@@ -1242,9 +1236,15 @@ State 89
 
 State 90
 
-   16 VAR_LIST: PTR_VAR VAR_LIST .
+   16 VAR_LIST: PTR_VAR COMA . VAR_LIST
 
-    $default  reduce using rule 16 (VAR_LIST)
+    MUL  shift, and go to state 48
+    VAR  shift, and go to state 49
+
+    VAR_LIST           go to state 133
+    PTR_VAR            go to state 51
+    PTR_DEPTH          go to state 52
+    ARRAY_DECLARATION  go to state 53
 
 
 State 91
@@ -1261,7 +1261,7 @@ State 92
     MUL  shift, and go to state 48
     VAR  shift, and go to state 49
 
-    VAR_LIST           go to state 133
+    VAR_LIST           go to state 134
     PTR_VAR            go to state 51
     PTR_DEPTH          go to state 52
     ARRAY_DECLARATION  go to state 53
@@ -1271,7 +1271,7 @@ State 93
 
    47 LOGICAL_EXPN1: NOT . LB LOGICAL_EXPN1 RB
 
-    LB  shift, and go to state 134
+    LB  shift, and go to state 135
 
 
 State 94
@@ -1279,7 +1279,7 @@ State 94
    45 LOGICAL_EXPN1: LOGICAL_EXPN1 . LOGICAL_OPERATOR LOGICAL_EXPN1
    48              | LB LOGICAL_EXPN1 . RB
 
-    RB     shift, and go to state 135
+    RB     shift, and go to state 136
     AMPER  shift, and go to state 101
     OR     shift, and go to state 102
 
@@ -1298,7 +1298,7 @@ State 95
    75       | LB A_EXPN . RB
    77       | A_EXPN . UNARY_OPERATORS
 
-    RB      shift, and go to state 136
+    RB      shift, and go to state 137
     PLUS    shift, and go to state 111
     MINUS   shift, and go to state 112
     MUL     shift, and go to state 113
@@ -1341,7 +1341,7 @@ State 97
     VAR     shift, and go to state 58
     NUMBER  shift, and go to state 59
 
-    LOGICAL_EXPN1         go to state 137
+    LOGICAL_EXPN1         go to state 138
     LOGICAL_EXPN2         go to state 62
     LOGICAL_EXPN2_ARTH    go to state 63
     VAR_ARRAY_ACCESS_RHS  go to state 64
@@ -1382,14 +1382,14 @@ State 100
 
    35 PROGRAM_STATEMENTS: LB LOGICAL_EXPN RB . QMARK LCB BODY2 RCB COLON LCB BODY2 RCB
 
-    QMARK  shift, and go to state 138
+    QMARK  shift, and go to state 139
 
 
 State 101
 
    57 LOGICAL_OPERATOR: AMPER . AMPER
 
-    AMPER  shift, and go to state 139
+    AMPER  shift, and go to state 140
 
 
 State 102
@@ -1410,7 +1410,7 @@ State 103
     VAR     shift, and go to state 58
     NUMBER  shift, and go to state 59
 
-    LOGICAL_EXPN1         go to state 140
+    LOGICAL_EXPN1         go to state 141
     LOGICAL_EXPN2         go to state 62
     LOGICAL_EXPN2_ARTH    go to state 63
     VAR_ARRAY_ACCESS_RHS  go to state 64
@@ -1469,7 +1469,7 @@ State 110
     VAR     shift, and go to state 58
     NUMBER  shift, and go to state 59
 
-    LOGICAL_EXPN2_ARTH    go to state 141
+    LOGICAL_EXPN2_ARTH    go to state 142
     VAR_ARRAY_ACCESS_RHS  go to state 64
     A_EXPN                go to state 65
 
@@ -1485,7 +1485,7 @@ State 111
     NUMBER  shift, and go to state 59
 
     VAR_ARRAY_ACCESS_RHS  go to state 64
-    A_EXPN                go to state 142
+    A_EXPN                go to state 143
 
 
 State 112
@@ -1499,7 +1499,7 @@ State 112
     NUMBER  shift, and go to state 59
 
     VAR_ARRAY_ACCESS_RHS  go to state 64
-    A_EXPN                go to state 143
+    A_EXPN                go to state 144
 
 
 State 113
@@ -1513,7 +1513,7 @@ State 113
     NUMBER  shift, and go to state 59
 
     VAR_ARRAY_ACCESS_RHS  go to state 64
-    A_EXPN                go to state 144
+    A_EXPN                go to state 145
 
 
 State 114
@@ -1527,7 +1527,7 @@ State 114
     NUMBER  shift, and go to state 59
 
     VAR_ARRAY_ACCESS_RHS  go to state 64
-    A_EXPN                go to state 145
+    A_EXPN                go to state 146
 
 
 State 115
@@ -1541,7 +1541,7 @@ State 115
     NUMBER  shift, and go to state 59
 
     VAR_ARRAY_ACCESS_RHS  go to state 64
-    A_EXPN                go to state 146
+    A_EXPN                go to state 147
 
 
 State 116
@@ -1555,7 +1555,7 @@ State 116
     NUMBER  shift, and go to state 59
 
     VAR_ARRAY_ACCESS_RHS  go to state 64
-    A_EXPN                go to state 147
+    A_EXPN                go to state 148
 
 
 State 117
@@ -1570,7 +1570,7 @@ State 118
    36 PROGRAM_STATEMENTS: IF LB LOGICAL_EXPN . RB LCB BODY2 RCB
    37                   | IF LB LOGICAL_EXPN . RB LCB BODY2 RCB ELSE LCB BODY2 RCB
 
-    RB  shift, and go to state 148
+    RB  shift, and go to state 149
 
 
 State 119
@@ -1581,28 +1581,28 @@ State 119
     LSQRB  shift, and go to state 72
     EQ     shift, and go to state 73
 
-    ARRAY_ACCESS  go to state 149
+    ARRAY_ACCESS  go to state 150
 
 
 State 120
 
    40 PROGRAM_STATEMENTS: FOR LB VAR_EXPN1 . SC LOGICAL_EXPN SC VAR_EXPN2 RB LCB BODY2 RCB
 
-    SC  shift, and go to state 150
+    SC  shift, and go to state 151
 
 
 State 121
 
    39 PROGRAM_STATEMENTS: DO LCB BODY2 . RCB WHILE LB LOGICAL_EXPN RB SC
 
-    RCB  shift, and go to state 151
+    RCB  shift, and go to state 152
 
 
 State 122
 
    38 PROGRAM_STATEMENTS: WHILE LB LOGICAL_EXPN . RB LCB BODY2 RCB
 
-    RB  shift, and go to state 152
+    RB  shift, and go to state 153
 
 
 State 123
@@ -1616,7 +1616,7 @@ State 123
    75       | LB A_EXPN . RB
    77       | A_EXPN . UNARY_OPERATORS
 
-    RB      shift, and go to state 136
+    RB      shift, and go to state 137
     PLUS    shift, and go to state 111
     MINUS   shift, and go to state 112
     MUL     shift, and go to state 113
@@ -1640,7 +1640,7 @@ State 124
     NUMBER  shift, and go to state 59
 
     VAR_ARRAY_ACCESS_RHS  go to state 64
-    A_EXPN                go to state 153
+    A_EXPN                go to state 154
 
 
 State 125
@@ -1674,7 +1674,7 @@ State 126
 
     $default  reduce using rule 65 ($@1)
 
-    $@1  go to state 154
+    $@1  go to state 155
 
 
 State 127
@@ -1738,7 +1738,7 @@ State 130
 
    25 ARRAY_SIZE: LSQRB NUMBER . RSQRB
 
-    RSQRB  shift, and go to state 155
+    RSQRB  shift, and go to state 156
 
 
 State 131
@@ -1752,17 +1752,24 @@ State 132
 
    24 ARRAY_SIZE: ARRAY_SIZE LSQRB . NUMBER RSQRB
 
-    NUMBER  shift, and go to state 156
+    NUMBER  shift, and go to state 157
 
 
 State 133
+
+   16 VAR_LIST: PTR_VAR COMA VAR_LIST .
+
+    $default  reduce using rule 16 (VAR_LIST)
+
+
+State 134
 
    15 VAR_LIST: ARRAY_DECLARATION COMA VAR_LIST .
 
     $default  reduce using rule 15 (VAR_LIST)
 
 
-State 134
+State 135
 
    47 LOGICAL_EXPN1: NOT LB . LOGICAL_EXPN1 RB
 
@@ -1773,55 +1780,55 @@ State 134
     VAR     shift, and go to state 58
     NUMBER  shift, and go to state 59
 
-    LOGICAL_EXPN1         go to state 157
+    LOGICAL_EXPN1         go to state 158
     LOGICAL_EXPN2         go to state 62
     LOGICAL_EXPN2_ARTH    go to state 63
     VAR_ARRAY_ACCESS_RHS  go to state 64
     A_EXPN                go to state 65
 
 
-State 135
+State 136
 
    48 LOGICAL_EXPN1: LB LOGICAL_EXPN1 RB .
 
     $default  reduce using rule 48 (LOGICAL_EXPN1)
 
 
-State 136
+State 137
 
    75 A_EXPN: LB A_EXPN RB .
 
     $default  reduce using rule 75 (A_EXPN)
 
 
-State 137
+State 138
 
    43 LOGICAL_EXPN: NOT LB LOGICAL_EXPN1 . RB
    45 LOGICAL_EXPN1: LOGICAL_EXPN1 . LOGICAL_OPERATOR LOGICAL_EXPN1
    47              | NOT LB LOGICAL_EXPN1 . RB
 
-    RB     shift, and go to state 158
+    RB     shift, and go to state 159
     AMPER  shift, and go to state 101
     OR     shift, and go to state 102
 
     LOGICAL_OPERATOR  go to state 103
 
 
-State 138
+State 139
 
    35 PROGRAM_STATEMENTS: LB LOGICAL_EXPN RB QMARK . LCB BODY2 RCB COLON LCB BODY2 RCB
 
-    LCB  shift, and go to state 159
+    LCB  shift, and go to state 160
 
 
-State 139
+State 140
 
    57 LOGICAL_OPERATOR: AMPER AMPER .
 
     $default  reduce using rule 57 (LOGICAL_OPERATOR)
 
 
-State 140
+State 141
 
    45 LOGICAL_EXPN1: LOGICAL_EXPN1 . LOGICAL_OPERATOR LOGICAL_EXPN1
    45              | LOGICAL_EXPN1 LOGICAL_OPERATOR LOGICAL_EXPN1 .
@@ -1836,14 +1843,14 @@ State 140
     LOGICAL_OPERATOR  go to state 103
 
 
-State 141
+State 142
 
    49 LOGICAL_EXPN2: LOGICAL_EXPN2_ARTH COMP_OPERATOR LOGICAL_EXPN2_ARTH .
 
     $default  reduce using rule 49 (LOGICAL_EXPN2)
 
 
-State 142
+State 143
 
    69 A_EXPN: A_EXPN . PLUS A_EXPN
    69       | A_EXPN PLUS A_EXPN .
@@ -1866,7 +1873,7 @@ State 142
     UNARY_OPERATORS  go to state 117
 
 
-State 143
+State 144
 
    69 A_EXPN: A_EXPN . PLUS A_EXPN
    70       | A_EXPN . MINUS A_EXPN
@@ -1889,7 +1896,7 @@ State 143
     UNARY_OPERATORS  go to state 117
 
 
-State 144
+State 145
 
    69 A_EXPN: A_EXPN . PLUS A_EXPN
    70       | A_EXPN . MINUS A_EXPN
@@ -1909,7 +1916,7 @@ State 144
     UNARY_OPERATORS  go to state 117
 
 
-State 145
+State 146
 
    69 A_EXPN: A_EXPN . PLUS A_EXPN
    70       | A_EXPN . MINUS A_EXPN
@@ -1929,7 +1936,7 @@ State 145
     UNARY_OPERATORS  go to state 117
 
 
-State 146
+State 147
 
    69 A_EXPN: A_EXPN . PLUS A_EXPN
    70       | A_EXPN . MINUS A_EXPN
@@ -1949,7 +1956,7 @@ State 146
     UNARY_OPERATORS  go to state 117
 
 
-State 147
+State 148
 
    69 A_EXPN: A_EXPN . PLUS A_EXPN
    70       | A_EXPN . MINUS A_EXPN
@@ -1967,15 +1974,15 @@ State 147
     UNARY_OPERATORS  go to state 117
 
 
-State 148
+State 149
 
    36 PROGRAM_STATEMENTS: IF LB LOGICAL_EXPN RB . LCB BODY2 RCB
    37                   | IF LB LOGICAL_EXPN RB . LCB BODY2 RCB ELSE LCB BODY2 RCB
 
-    LCB  shift, and go to state 160
+    LCB  shift, and go to state 161
 
 
-State 149
+State 150
 
    63 VAR_ARRAY_ACCESS_LHS: VAR ARRAY_ACCESS .
    66 ARRAY_ACCESS: ARRAY_ACCESS . LSQRB $@1 A_EXPN RSQRB
@@ -1985,7 +1992,7 @@ State 149
     $default  reduce using rule 63 (VAR_ARRAY_ACCESS_LHS)
 
 
-State 150
+State 151
 
    40 PROGRAM_STATEMENTS: FOR LB VAR_EXPN1 SC . LOGICAL_EXPN SC VAR_EXPN2 RB LCB BODY2 RCB
 
@@ -1996,7 +2003,7 @@ State 150
     VAR     shift, and go to state 58
     NUMBER  shift, and go to state 59
 
-    LOGICAL_EXPN          go to state 161
+    LOGICAL_EXPN          go to state 162
     LOGICAL_EXPN1         go to state 61
     LOGICAL_EXPN2         go to state 62
     LOGICAL_EXPN2_ARTH    go to state 63
@@ -2004,21 +2011,21 @@ State 150
     A_EXPN                go to state 65
 
 
-State 151
+State 152
 
    39 PROGRAM_STATEMENTS: DO LCB BODY2 RCB . WHILE LB LOGICAL_EXPN RB SC
 
-    WHILE  shift, and go to state 162
-
-
-State 152
-
-   38 PROGRAM_STATEMENTS: WHILE LB LOGICAL_EXPN RB . LCB BODY2 RCB
-
-    LCB  shift, and go to state 163
+    WHILE  shift, and go to state 163
 
 
 State 153
+
+   38 PROGRAM_STATEMENTS: WHILE LB LOGICAL_EXPN RB . LCB BODY2 RCB
+
+    LCB  shift, and go to state 164
+
+
+State 154
 
    68 ARRAY_ACCESS: LSQRB $@2 A_EXPN . RSQRB
    69 A_EXPN: A_EXPN . PLUS A_EXPN
@@ -2029,7 +2036,7 @@ State 153
    74       | A_EXPN . EXP A_EXPN
    77       | A_EXPN . UNARY_OPERATORS
 
-    RSQRB   shift, and go to state 164
+    RSQRB   shift, and go to state 165
     PLUS    shift, and go to state 111
     MINUS   shift, and go to state 112
     MUL     shift, and go to state 113
@@ -2042,7 +2049,7 @@ State 153
     UNARY_OPERATORS  go to state 117
 
 
-State 154
+State 155
 
    66 ARRAY_ACCESS: ARRAY_ACCESS LSQRB $@1 . A_EXPN RSQRB
 
@@ -2053,36 +2060,36 @@ State 154
     NUMBER  shift, and go to state 59
 
     VAR_ARRAY_ACCESS_RHS  go to state 64
-    A_EXPN                go to state 165
+    A_EXPN                go to state 166
 
 
-State 155
+State 156
 
    25 ARRAY_SIZE: LSQRB NUMBER RSQRB .
 
     $default  reduce using rule 25 (ARRAY_SIZE)
 
 
-State 156
+State 157
 
    24 ARRAY_SIZE: ARRAY_SIZE LSQRB NUMBER . RSQRB
 
-    RSQRB  shift, and go to state 166
+    RSQRB  shift, and go to state 167
 
 
-State 157
+State 158
 
    45 LOGICAL_EXPN1: LOGICAL_EXPN1 . LOGICAL_OPERATOR LOGICAL_EXPN1
    47              | NOT LB LOGICAL_EXPN1 . RB
 
-    RB     shift, and go to state 167
+    RB     shift, and go to state 168
     AMPER  shift, and go to state 101
     OR     shift, and go to state 102
 
     LOGICAL_OPERATOR  go to state 103
 
 
-State 158
+State 159
 
    43 LOGICAL_EXPN: NOT LB LOGICAL_EXPN1 RB .
    47 LOGICAL_EXPN1: NOT LB LOGICAL_EXPN1 RB .
@@ -2096,40 +2103,9 @@ State 158
     $default  reduce using rule 43 (LOGICAL_EXPN)
 
 
-State 159
-
-   35 PROGRAM_STATEMENTS: LB LOGICAL_EXPN RB QMARK LCB . BODY2 RCB COLON LCB BODY2 RCB
-
-    LB      shift, and go to state 32
-    SC      shift, and go to state 33
-    IF      shift, and go to state 34
-    FOR     shift, and go to state 35
-    DO      shift, and go to state 36
-    WHILE   shift, and go to state 37
-    MUL     shift, and go to state 38
-    INT     shift, and go to state 24
-    CHAR    shift, and go to state 25
-    FLOAT   shift, and go to state 26
-    DOUBLE  shift, and go to state 27
-    VAR     shift, and go to state 39
-
-    $default  reduce using rule 10 (BODY2)
-
-    BODY2                   go to state 168
-    DECLARATION_STATEMENTS  go to state 41
-    DATA_TYPE               go to state 30
-    PROGRAM_STATEMENTS      go to state 42
-    POINTER_STATEMENTS      go to state 43
-    POINTER_STATEMENTS_LHS  go to state 44
-    VAR_EXPN1               go to state 45
-    VAR_EXPN2               go to state 46
-    VAR_ARRAY_ACCESS_LHS    go to state 47
-
-
 State 160
 
-   36 PROGRAM_STATEMENTS: IF LB LOGICAL_EXPN RB LCB . BODY2 RCB
-   37                   | IF LB LOGICAL_EXPN RB LCB . BODY2 RCB ELSE LCB BODY2 RCB
+   35 PROGRAM_STATEMENTS: LB LOGICAL_EXPN RB QMARK LCB . BODY2 RCB COLON LCB BODY2 RCB
 
     LB      shift, and go to state 32
     SC      shift, and go to state 33
@@ -2159,19 +2135,50 @@ State 160
 
 State 161
 
-   40 PROGRAM_STATEMENTS: FOR LB VAR_EXPN1 SC LOGICAL_EXPN . SC VAR_EXPN2 RB LCB BODY2 RCB
+   36 PROGRAM_STATEMENTS: IF LB LOGICAL_EXPN RB LCB . BODY2 RCB
+   37                   | IF LB LOGICAL_EXPN RB LCB . BODY2 RCB ELSE LCB BODY2 RCB
 
-    SC  shift, and go to state 170
+    LB      shift, and go to state 32
+    SC      shift, and go to state 33
+    IF      shift, and go to state 34
+    FOR     shift, and go to state 35
+    DO      shift, and go to state 36
+    WHILE   shift, and go to state 37
+    MUL     shift, and go to state 38
+    INT     shift, and go to state 24
+    CHAR    shift, and go to state 25
+    FLOAT   shift, and go to state 26
+    DOUBLE  shift, and go to state 27
+    VAR     shift, and go to state 39
+
+    $default  reduce using rule 10 (BODY2)
+
+    BODY2                   go to state 170
+    DECLARATION_STATEMENTS  go to state 41
+    DATA_TYPE               go to state 30
+    PROGRAM_STATEMENTS      go to state 42
+    POINTER_STATEMENTS      go to state 43
+    POINTER_STATEMENTS_LHS  go to state 44
+    VAR_EXPN1               go to state 45
+    VAR_EXPN2               go to state 46
+    VAR_ARRAY_ACCESS_LHS    go to state 47
 
 
 State 162
 
-   39 PROGRAM_STATEMENTS: DO LCB BODY2 RCB WHILE . LB LOGICAL_EXPN RB SC
+   40 PROGRAM_STATEMENTS: FOR LB VAR_EXPN1 SC LOGICAL_EXPN . SC VAR_EXPN2 RB LCB BODY2 RCB
 
-    LB  shift, and go to state 171
+    SC  shift, and go to state 171
 
 
 State 163
+
+   39 PROGRAM_STATEMENTS: DO LCB BODY2 RCB WHILE . LB LOGICAL_EXPN RB SC
+
+    LB  shift, and go to state 172
+
+
+State 164
 
    38 PROGRAM_STATEMENTS: WHILE LB LOGICAL_EXPN RB LCB . BODY2 RCB
 
@@ -2190,7 +2197,7 @@ State 163
 
     $default  reduce using rule 10 (BODY2)
 
-    BODY2                   go to state 172
+    BODY2                   go to state 173
     DECLARATION_STATEMENTS  go to state 41
     DATA_TYPE               go to state 30
     PROGRAM_STATEMENTS      go to state 42
@@ -2201,14 +2208,14 @@ State 163
     VAR_ARRAY_ACCESS_LHS    go to state 47
 
 
-State 164
+State 165
 
    68 ARRAY_ACCESS: LSQRB $@2 A_EXPN RSQRB .
 
     $default  reduce using rule 68 (ARRAY_ACCESS)
 
 
-State 165
+State 166
 
    66 ARRAY_ACCESS: ARRAY_ACCESS LSQRB $@1 A_EXPN . RSQRB
    69 A_EXPN: A_EXPN . PLUS A_EXPN
@@ -2219,7 +2226,7 @@ State 165
    74       | A_EXPN . EXP A_EXPN
    77       | A_EXPN . UNARY_OPERATORS
 
-    RSQRB   shift, and go to state 173
+    RSQRB   shift, and go to state 174
     PLUS    shift, and go to state 111
     MINUS   shift, and go to state 112
     MUL     shift, and go to state 113
@@ -2232,45 +2239,45 @@ State 165
     UNARY_OPERATORS  go to state 117
 
 
-State 166
+State 167
 
    24 ARRAY_SIZE: ARRAY_SIZE LSQRB NUMBER RSQRB .
 
     $default  reduce using rule 24 (ARRAY_SIZE)
 
 
-State 167
+State 168
 
    47 LOGICAL_EXPN1: NOT LB LOGICAL_EXPN1 RB .
 
     $default  reduce using rule 47 (LOGICAL_EXPN1)
 
 
-State 168
-
-   35 PROGRAM_STATEMENTS: LB LOGICAL_EXPN RB QMARK LCB BODY2 . RCB COLON LCB BODY2 RCB
-
-    RCB  shift, and go to state 174
-
-
 State 169
 
-   36 PROGRAM_STATEMENTS: IF LB LOGICAL_EXPN RB LCB BODY2 . RCB
-   37                   | IF LB LOGICAL_EXPN RB LCB BODY2 . RCB ELSE LCB BODY2 RCB
+   35 PROGRAM_STATEMENTS: LB LOGICAL_EXPN RB QMARK LCB BODY2 . RCB COLON LCB BODY2 RCB
 
     RCB  shift, and go to state 175
 
 
 State 170
 
-   40 PROGRAM_STATEMENTS: FOR LB VAR_EXPN1 SC LOGICAL_EXPN SC . VAR_EXPN2 RB LCB BODY2 RCB
+   36 PROGRAM_STATEMENTS: IF LB LOGICAL_EXPN RB LCB BODY2 . RCB
+   37                   | IF LB LOGICAL_EXPN RB LCB BODY2 . RCB ELSE LCB BODY2 RCB
 
-    VAR  shift, and go to state 176
-
-    VAR_EXPN2  go to state 177
+    RCB  shift, and go to state 176
 
 
 State 171
+
+   40 PROGRAM_STATEMENTS: FOR LB VAR_EXPN1 SC LOGICAL_EXPN SC . VAR_EXPN2 RB LCB BODY2 RCB
+
+    VAR  shift, and go to state 177
+
+    VAR_EXPN2  go to state 178
+
+
+State 172
 
    39 PROGRAM_STATEMENTS: DO LCB BODY2 RCB WHILE LB . LOGICAL_EXPN RB SC
 
@@ -2281,7 +2288,7 @@ State 171
     VAR     shift, and go to state 58
     NUMBER  shift, and go to state 59
 
-    LOGICAL_EXPN          go to state 178
+    LOGICAL_EXPN          go to state 179
     LOGICAL_EXPN1         go to state 61
     LOGICAL_EXPN2         go to state 62
     LOGICAL_EXPN2_ARTH    go to state 63
@@ -2289,38 +2296,38 @@ State 171
     A_EXPN                go to state 65
 
 
-State 172
+State 173
 
    38 PROGRAM_STATEMENTS: WHILE LB LOGICAL_EXPN RB LCB BODY2 . RCB
 
-    RCB  shift, and go to state 179
+    RCB  shift, and go to state 180
 
 
-State 173
+State 174
 
    66 ARRAY_ACCESS: ARRAY_ACCESS LSQRB $@1 A_EXPN RSQRB .
 
     $default  reduce using rule 66 (ARRAY_ACCESS)
 
 
-State 174
+State 175
 
    35 PROGRAM_STATEMENTS: LB LOGICAL_EXPN RB QMARK LCB BODY2 RCB . COLON LCB BODY2 RCB
 
-    COLON  shift, and go to state 180
+    COLON  shift, and go to state 181
 
 
-State 175
+State 176
 
    36 PROGRAM_STATEMENTS: IF LB LOGICAL_EXPN RB LCB BODY2 RCB .
    37                   | IF LB LOGICAL_EXPN RB LCB BODY2 RCB . ELSE LCB BODY2 RCB
 
-    ELSE  shift, and go to state 181
+    ELSE  shift, and go to state 182
 
     $default  reduce using rule 36 (PROGRAM_STATEMENTS)
 
 
-State 176
+State 177
 
    61 VAR_EXPN2: VAR . ARRAY_ACCESS UNARY_OPERATORS
    62          | VAR . UNARY_OPERATORS
@@ -2329,46 +2336,46 @@ State 176
     UPLUS   shift, and go to state 74
     UMINUS  shift, and go to state 75
 
-    ARRAY_ACCESS     go to state 182
+    ARRAY_ACCESS     go to state 183
     UNARY_OPERATORS  go to state 77
-
-
-State 177
-
-   40 PROGRAM_STATEMENTS: FOR LB VAR_EXPN1 SC LOGICAL_EXPN SC VAR_EXPN2 . RB LCB BODY2 RCB
-
-    RB  shift, and go to state 183
 
 
 State 178
 
-   39 PROGRAM_STATEMENTS: DO LCB BODY2 RCB WHILE LB LOGICAL_EXPN . RB SC
+   40 PROGRAM_STATEMENTS: FOR LB VAR_EXPN1 SC LOGICAL_EXPN SC VAR_EXPN2 . RB LCB BODY2 RCB
 
     RB  shift, and go to state 184
 
 
 State 179
 
+   39 PROGRAM_STATEMENTS: DO LCB BODY2 RCB WHILE LB LOGICAL_EXPN . RB SC
+
+    RB  shift, and go to state 185
+
+
+State 180
+
    38 PROGRAM_STATEMENTS: WHILE LB LOGICAL_EXPN RB LCB BODY2 RCB .
 
     $default  reduce using rule 38 (PROGRAM_STATEMENTS)
 
 
-State 180
-
-   35 PROGRAM_STATEMENTS: LB LOGICAL_EXPN RB QMARK LCB BODY2 RCB COLON . LCB BODY2 RCB
-
-    LCB  shift, and go to state 185
-
-
 State 181
 
-   37 PROGRAM_STATEMENTS: IF LB LOGICAL_EXPN RB LCB BODY2 RCB ELSE . LCB BODY2 RCB
+   35 PROGRAM_STATEMENTS: LB LOGICAL_EXPN RB QMARK LCB BODY2 RCB COLON . LCB BODY2 RCB
 
     LCB  shift, and go to state 186
 
 
 State 182
+
+   37 PROGRAM_STATEMENTS: IF LB LOGICAL_EXPN RB LCB BODY2 RCB ELSE . LCB BODY2 RCB
+
+    LCB  shift, and go to state 187
+
+
+State 183
 
    61 VAR_EXPN2: VAR ARRAY_ACCESS . UNARY_OPERATORS
    66 ARRAY_ACCESS: ARRAY_ACCESS . LSQRB $@1 A_EXPN RSQRB
@@ -2380,53 +2387,23 @@ State 182
     UNARY_OPERATORS  go to state 127
 
 
-State 183
+State 184
 
    40 PROGRAM_STATEMENTS: FOR LB VAR_EXPN1 SC LOGICAL_EXPN SC VAR_EXPN2 RB . LCB BODY2 RCB
 
-    LCB  shift, and go to state 187
-
-
-State 184
-
-   39 PROGRAM_STATEMENTS: DO LCB BODY2 RCB WHILE LB LOGICAL_EXPN RB . SC
-
-    SC  shift, and go to state 188
+    LCB  shift, and go to state 188
 
 
 State 185
 
-   35 PROGRAM_STATEMENTS: LB LOGICAL_EXPN RB QMARK LCB BODY2 RCB COLON LCB . BODY2 RCB
+   39 PROGRAM_STATEMENTS: DO LCB BODY2 RCB WHILE LB LOGICAL_EXPN RB . SC
 
-    LB      shift, and go to state 32
-    SC      shift, and go to state 33
-    IF      shift, and go to state 34
-    FOR     shift, and go to state 35
-    DO      shift, and go to state 36
-    WHILE   shift, and go to state 37
-    MUL     shift, and go to state 38
-    INT     shift, and go to state 24
-    CHAR    shift, and go to state 25
-    FLOAT   shift, and go to state 26
-    DOUBLE  shift, and go to state 27
-    VAR     shift, and go to state 39
-
-    $default  reduce using rule 10 (BODY2)
-
-    BODY2                   go to state 189
-    DECLARATION_STATEMENTS  go to state 41
-    DATA_TYPE               go to state 30
-    PROGRAM_STATEMENTS      go to state 42
-    POINTER_STATEMENTS      go to state 43
-    POINTER_STATEMENTS_LHS  go to state 44
-    VAR_EXPN1               go to state 45
-    VAR_EXPN2               go to state 46
-    VAR_ARRAY_ACCESS_LHS    go to state 47
+    SC  shift, and go to state 189
 
 
 State 186
 
-   37 PROGRAM_STATEMENTS: IF LB LOGICAL_EXPN RB LCB BODY2 RCB ELSE LCB . BODY2 RCB
+   35 PROGRAM_STATEMENTS: LB LOGICAL_EXPN RB QMARK LCB BODY2 RCB COLON LCB . BODY2 RCB
 
     LB      shift, and go to state 32
     SC      shift, and go to state 33
@@ -2456,7 +2433,7 @@ State 186
 
 State 187
 
-   40 PROGRAM_STATEMENTS: FOR LB VAR_EXPN1 SC LOGICAL_EXPN SC VAR_EXPN2 RB LCB . BODY2 RCB
+   37 PROGRAM_STATEMENTS: IF LB LOGICAL_EXPN RB LCB BODY2 RCB ELSE LCB . BODY2 RCB
 
     LB      shift, and go to state 32
     SC      shift, and go to state 33
@@ -2486,47 +2463,77 @@ State 187
 
 State 188
 
+   40 PROGRAM_STATEMENTS: FOR LB VAR_EXPN1 SC LOGICAL_EXPN SC VAR_EXPN2 RB LCB . BODY2 RCB
+
+    LB      shift, and go to state 32
+    SC      shift, and go to state 33
+    IF      shift, and go to state 34
+    FOR     shift, and go to state 35
+    DO      shift, and go to state 36
+    WHILE   shift, and go to state 37
+    MUL     shift, and go to state 38
+    INT     shift, and go to state 24
+    CHAR    shift, and go to state 25
+    FLOAT   shift, and go to state 26
+    DOUBLE  shift, and go to state 27
+    VAR     shift, and go to state 39
+
+    $default  reduce using rule 10 (BODY2)
+
+    BODY2                   go to state 192
+    DECLARATION_STATEMENTS  go to state 41
+    DATA_TYPE               go to state 30
+    PROGRAM_STATEMENTS      go to state 42
+    POINTER_STATEMENTS      go to state 43
+    POINTER_STATEMENTS_LHS  go to state 44
+    VAR_EXPN1               go to state 45
+    VAR_EXPN2               go to state 46
+    VAR_ARRAY_ACCESS_LHS    go to state 47
+
+
+State 189
+
    39 PROGRAM_STATEMENTS: DO LCB BODY2 RCB WHILE LB LOGICAL_EXPN RB SC .
 
     $default  reduce using rule 39 (PROGRAM_STATEMENTS)
 
 
-State 189
-
-   35 PROGRAM_STATEMENTS: LB LOGICAL_EXPN RB QMARK LCB BODY2 RCB COLON LCB BODY2 . RCB
-
-    RCB  shift, and go to state 192
-
-
 State 190
 
-   37 PROGRAM_STATEMENTS: IF LB LOGICAL_EXPN RB LCB BODY2 RCB ELSE LCB BODY2 . RCB
+   35 PROGRAM_STATEMENTS: LB LOGICAL_EXPN RB QMARK LCB BODY2 RCB COLON LCB BODY2 . RCB
 
     RCB  shift, and go to state 193
 
 
 State 191
 
-   40 PROGRAM_STATEMENTS: FOR LB VAR_EXPN1 SC LOGICAL_EXPN SC VAR_EXPN2 RB LCB BODY2 . RCB
+   37 PROGRAM_STATEMENTS: IF LB LOGICAL_EXPN RB LCB BODY2 RCB ELSE LCB BODY2 . RCB
 
     RCB  shift, and go to state 194
 
 
 State 192
 
+   40 PROGRAM_STATEMENTS: FOR LB VAR_EXPN1 SC LOGICAL_EXPN SC VAR_EXPN2 RB LCB BODY2 . RCB
+
+    RCB  shift, and go to state 195
+
+
+State 193
+
    35 PROGRAM_STATEMENTS: LB LOGICAL_EXPN RB QMARK LCB BODY2 RCB COLON LCB BODY2 RCB .
 
     $default  reduce using rule 35 (PROGRAM_STATEMENTS)
 
 
-State 193
+State 194
 
    37 PROGRAM_STATEMENTS: IF LB LOGICAL_EXPN RB LCB BODY2 RCB ELSE LCB BODY2 RCB .
 
     $default  reduce using rule 37 (PROGRAM_STATEMENTS)
 
 
-State 194
+State 195
 
    40 PROGRAM_STATEMENTS: FOR LB VAR_EXPN1 SC LOGICAL_EXPN SC VAR_EXPN2 RB LCB BODY2 RCB .
 

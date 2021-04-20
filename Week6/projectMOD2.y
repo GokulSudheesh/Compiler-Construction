@@ -59,7 +59,7 @@ VAR_LIST : VAR COMA VAR_LIST {
 			    }
 	| ARRAY_DECLARATION COMA VAR_LIST {
 	}
-	| PTR_VAR VAR_LIST
+	| PTR_VAR COMA VAR_LIST
 	| VAR {
 		insert_to_table($1,current_data_type);
 	      }
