@@ -296,12 +296,26 @@ ARRAY_ACCESS : ARRAY_ACCESS LSQRB A_EXPN RSQRB
 					strcpy($$.var_name, $1.var_name);
 				}
 			}
-			| VAR {
+			| VAR LSQRB A_EXPN RSQRB{
 				struct symbol_table column = get_column($1);
-				$$.type = column.type;
-				$$.data_depth = column.pointerDepth;
-				$$.isValue = 0;
-				strcpy($$.var_name, $1);
+				dims++;
+				if($3.data_depth!=0 || $3.type!=0)
+				{
+					yyerror("Array index integer expected\n");
+					exit(0);
+				}
+				else if(column.pointerDepth==0)
+				{
+					yyerror("Subscripted value neither array nor pointer");
+					exit(0);
+				}
+				else
+				{
+					$$.type = column.type;
+					$$.data_depth = column.pointerDepth-1;
+					$$.isValue = 0;
+					strcpy($$.var_name, $1);
+				}
 			}
 
 INCR_DCR_EXPN : A_EXPN UNARY_OPERATORS {
