@@ -54,7 +54,8 @@
 [\"] {return DQUOTE;}
 \/\/(.*) {/*Single line comment*/};	
 ([A-Z]+|[a-z]+)([A-Z]+|[a-z]+|[0-9]+)* {strcpy(yylval.var_name,yytext);return VAR;}
-[0-9]+ {yylval.integer_val = atoi(yytext); return NUMBER;}
+[0-9]+ {yylval.integer_val = atoi(yytext); return INT_NUMBER;}
+[0-9]+(\.[0-9]+) {yylval.float_val = atof(yytext); return FLOAT_NUMBER;}
 [\n\t ]+  {/*new line or space*/}
 . {printf("invalid character sequence %s\n",yytext); exit(0);}
 %%

@@ -36,6 +36,7 @@
 int data_type;
 char var_name[30];
 int integer_val;
+float float_val;
 struct 
 	{
 		char var_name[30];
@@ -57,7 +58,8 @@ struct
 %token<data_type>FLOAT
 %token<data_type>DOUBLE
 %token<var_name>VAR
-%token<integer_val>NUMBER
+%token<integer_val>INT_NUMBER
+%token<float_val>FLOAT_NUMBER
 %type<data_type>DATA_TYPE
 %type<EXPN_type>A_EXPN
 %type<EXPN_type>ARRAY_ACCESS
@@ -84,6 +86,7 @@ VAR_LIST : VAR COMA VAR_LIST {
 		//printf("<ARRAY_DECLARATION COMA VAR_LIST>");
 	}
 	| PTR_VAR COMA VAR_LIST
+	| VAR_LIST2 COMA VAR_LIST
 	| VAR {
 		insert_to_table($1,current_data_type);
 	      }
@@ -91,6 +94,20 @@ VAR_LIST : VAR COMA VAR_LIST {
 		//printf("<ARRAY_DECLARATION>");
 	}
 	| PTR_VAR
+	| VAR_LIST2
+VAR_LIST2 : VAR EQ A_EXPN {
+				if ($3.data_depth!=0){
+					yyerror("Incompatible pointer type in assignment");
+					exit(0);
+				}
+				if (!(current_data_type == 2 && $3.type == 0)){
+					if (current_data_type != $3.type){
+						yyerror("Incompatible types.");
+						exit(0);
+					}
+				}
+				insert_to_table($1,current_data_type);
+			}
 PTR_VAR :	PTR_DEPTH VAR {
 				//printf("<PTR_DEPTH VAR>");
 				insert_to_table($2,current_data_type);
@@ -110,12 +127,12 @@ ARRAY_DECLARATION: VAR ARRAY_SIZE {
 		is_Array = 1;
 		insert_to_table($1,current_data_type);
 	}
-ARRAY_SIZE : ARRAY_SIZE LSQRB NUMBER RSQRB {
+ARRAY_SIZE : ARRAY_SIZE LSQRB INT_NUMBER RSQRB {
 				dims++;
 				array_dim[dims] = $3;
 				//printf("<ARRAY_SIZE LSQRB %d RSQRB>", $3);
 			}
-			| LSQRB NUMBER RSQRB {
+			| LSQRB INT_NUMBER RSQRB {
 				dims = 0;
 				array_dim[dims] = $2;
 				//printf("<LSQRB %d RSQRB>", $2);
@@ -251,8 +268,13 @@ A_EXPN	: A_EXPN OPR_PREC1 A_EXPN
 			$$.isValue = 0;
 			strcpy($$.var_name, $1);
 		}
-		| NUMBER {
+		| INT_NUMBER {
 			$$.type = 0;
+			$$.data_depth = 0;	
+			$$.isValue = 1;
+		}
+		| FLOAT_NUMBER {
+			$$.type = 2;
 			$$.data_depth = 0;	
 			$$.isValue = 1;
 		}
@@ -491,7 +513,7 @@ int main()
 {
     yyparse();
 	if(success){
-    	printf("\n Parsing Successful\n");
+    	printf("\nParsing Successful\n");
 	}
     return 0;
 }

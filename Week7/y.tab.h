@@ -93,7 +93,8 @@ extern int yydebug;
     FLOAT = 299,
     DOUBLE = 300,
     VAR = 301,
-    NUMBER = 302
+    INT_NUMBER = 302,
+    FLOAT_NUMBER = 303
   };
 #endif
 /* Tokens.  */
@@ -141,7 +142,8 @@ extern int yydebug;
 #define FLOAT 299
 #define DOUBLE 300
 #define VAR 301
-#define NUMBER 302
+#define INT_NUMBER 302
+#define FLOAT_NUMBER 303
 
 /* Value type.  */
 #if ! defined YYSTYPE && ! defined YYSTYPE_IS_DECLARED
@@ -152,6 +154,7 @@ union YYSTYPE
 int data_type;
 char var_name[30];
 int integer_val;
+float float_val;
 struct 
 	{
 		char var_name[30];
@@ -160,7 +163,7 @@ struct
 		int isValue;
 	}EXPN_type;
 
-#line 164 "y.tab.h"
+#line 167 "y.tab.h"
 
 };
 typedef union YYSTYPE YYSTYPE;
