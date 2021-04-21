@@ -12,6 +12,7 @@
 "include" {return INCLUDE;}
 ([a-z]+|[A-Z]+)+["."][h] {return HEADER_FILE;}
 "if"	{return IF;}
+"else if" {return ELSE_IF;}
 "else"	{return ELSE;}
 "for"	{return FOR;}
 "do"	{return DO;}

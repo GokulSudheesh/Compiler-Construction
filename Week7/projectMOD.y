@@ -5,7 +5,7 @@
 	int yylex(void);
 	int yyerror(const char *s);
 	int yylineno;
-	int success = 1;
+	int success = 0;
 	int current_data_type;
 	int is_modulus = 0;
 	char current_operator;
@@ -13,12 +13,23 @@
 	int dims;
 	int array_dim[5];
 	int ptr_depth;
-	struct symbol_table{char var_name[30]; int type; int dim; int pointerDepth; int dim_bounds[5];}var_list[20];
-	int var_count=-1;
+	
+	struct symbol_table{char var_name[30]; int type; int dim; int pointerDepth; int dim_bounds[5];};
+	struct symbol_table_stack{
+    	struct symbol_table var_list[100];
+    	int var_count;
+    	struct symbol_table_stack * prev;
+    	struct symbol_table_stack * next;
+	};
+	struct symbol_table_stack * pointer = NULL;
+
+	extern void push_table();
+	extern void pop_table();
 	struct symbol_table get_column(char var[30]);
-	extern int lookup_in_table(char var[30]);
+	extern int lookup_in_table(char var[30], int mode);
 	extern void insert_to_table(char var[30], int type);
 	extern int get_array_dimensions(char var[30]);
+	extern void display_symbol_table();
 %}
 
 %union{
@@ -33,7 +44,7 @@ struct
 		int isValue;
 	}EXPN_type;
 }
-%token HASH INCLUDE HEADER_FILE MAIN LB RB LCB RCB LSQRB RSQRB SC COLON QMARK COMA IF ELSE FOR DO WHILE ET EQ GT LT GTE LTE NE AMPER OR NOT DQUOTE PLUS MINUS MUL DIV MOD EXP UPLUS UMINUS
+%token HASH INCLUDE HEADER_FILE MAIN LB RB LCB RCB LSQRB RSQRB SC COLON QMARK COMA IF ELSE_IF ELSE FOR DO WHILE ET EQ GT LT GTE LTE NE AMPER OR NOT DQUOTE PLUS MINUS MUL DIV MOD EXP UPLUS UMINUS
 
 %left PLUS MINUS
 %left MUL DIV MOD
@@ -55,8 +66,9 @@ struct
 %start prm
 
 %%
-prm	: HEADERS MAIN_TYPE MAIN LB RB LCB BODY RCB {
-							printf("\n parsing successful\n");
+prm	: HEADERS MAIN_TYPE MAIN LB RB LCB {push_table();} BODY RCB {
+							pop_table();
+							success=1;
 						   }
 HEADERS : HEADER HEADERS | HEADER
 HEADER	: HASH INCLUDE LT HEADER_FILE GT | HASH INCLUDE DQUOTE HEADER2 HEADER_FILE DQUOTE
@@ -129,12 +141,16 @@ DATA_TYPE : INT {
 PROGRAM_STATEMENTS :	ASSIGNMENT_STATEMENT SC
 				| SC
 				| INCR_DCR_EXPN SC
-				| LB LOGICAL_EXPN RB QMARK LCB BODY2 RCB COLON LCB BODY2 RCB 
-				| IF LB LOGICAL_EXPN RB LCB BODY2 RCB
-				| IF LB LOGICAL_EXPN RB LCB BODY2 RCB ELSE LCB BODY2 RCB
-				| WHILE LB LOGICAL_EXPN RB LCB BODY2 RCB
-				| DO LCB BODY2 RCB WHILE LB LOGICAL_EXPN RB SC
-				| FOR LB ASSIGNMENT_STATEMENT SC LOGICAL_EXPN SC INCR_DCR_EXPN RB LCB BODY2 RCB
+				| LB LOGICAL_EXPN RB QMARK LCB {push_table();} BODY2 RCB {pop_table();} COLON LCB {push_table();} BODY2 RCB {pop_table();}
+				| CONDITIONAL_STATEMENTS
+				| WHILE LB LOGICAL_EXPN RB LCB {push_table();} BODY2 RCB {pop_table();}
+				| DO LCB {push_table();} BODY2 RCB {pop_table();} WHILE LB LOGICAL_EXPN RB SC
+				| FOR LB ASSIGNMENT_STATEMENT SC LOGICAL_EXPN SC INCR_DCR_EXPN RB LCB {push_table();} BODY2 RCB {pop_table();}
+
+CONDITIONAL_STATEMENTS : IF_STATEMENT | IF_STATEMENT ELSE_STATEMENT | IF_STATEMENT ELSE_IF_STATEMENT | IF_STATEMENT ELSE_IF_STATEMENT ELSE_STATEMENT
+IF_STATEMENT : IF LB LOGICAL_EXPN RB LCB {push_table();} BODY2 RCB {pop_table();}
+ELSE_IF_STATEMENT : ELSE_IF LB LOGICAL_EXPN RB LCB {push_table();} BODY2 RCB {pop_table();} | ELSE_IF_STATEMENT ELSE_IF LB LOGICAL_EXPN RB LCB {push_table();} BODY2 RCB {pop_table();}
+ELSE_STATEMENT : ELSE LCB {push_table();} BODY2 RCB {pop_table();}
 
 ASSIGNMENT_STATEMENT : A_EXPN EQ A_EXPN
 				{
@@ -339,100 +355,144 @@ OPR_PREC2: DIV {current_operator='/';}
 
 %%
 
+void push_table(){
+    struct symbol_table_stack * node = (struct symbol_table_stack *)malloc(sizeof(struct symbol_table_stack));
+    node->var_count = -1;
+    
+    if(pointer == NULL){
+        pointer = node;
+    }
+    else{
+        pointer->next = node;
+        node->prev = pointer;
+        pointer = node;
+    }
+}
+
+void pop_table(){
+	display_symbol_table();
+    if(pointer != NULL){
+        if(pointer->prev == NULL){
+            pointer = NULL;
+        }
+        else{
+            pointer = pointer->prev;
+            pointer->next = NULL;
+        }        
+    }
+}
+
 struct symbol_table get_column(char var[30]){
-    if(lookup_in_table(var)!=-1){
-		for(int i=0; i<=var_count; i++)
-		{
-			if(strcmp(var_list[i].var_name, var)==0)
-			{
-				return var_list[i];
-			}
-		}
+    struct symbol_table_stack * current = pointer;
+    if(lookup_in_table(var,0)!=-1){        
+        while(current != NULL){
+            for(int i=0; i<=current->var_count; i++)
+            {
+                if(strcmp(current->var_list[i].var_name, var)==0)
+                {
+                    return current->var_list[i];
+                }
+            }
+            current = current->prev;
+        }
 	}
 	else{
 		printf("\n variable \"%s\" undeclared\n",var);exit(0);
 	}
-	return var_list[0];  
+	return current->var_list[0];
 }
 
-int lookup_in_table(char var[30])
+int lookup_in_table(char var[30], int mode) //mode (0->check all nodes) (1->check current node) 
 {
-	for(int i=0; i<=var_count; i++)
-	{
-		if(strcmp(var_list[i].var_name, var)==0)
-		{
-			return var_list[i].type;
-		}
-	}
+    struct symbol_table_stack * current = pointer;
+    while(current != NULL){
+        for(int i=0; i<=current->var_count; i++)
+        {
+            if(strcmp(current->var_list[i].var_name, var)==0)
+            {
+                return current->var_list[i].type;
+            }
+        }
+        if(mode == 1){
+            return -1;
+        }
+        current = current->prev; 
+    }    
 	return -1;
 }
 void insert_to_table(char var[30], int type)
 {
-	if (lookup_in_table(var) == -1)
+	if (lookup_in_table(var,1) == -1)
 	{
-		var_count++;
-		strcpy(var_list[var_count].var_name, var);
-    	var_list[var_count].type = type;
+		pointer->var_count++;
+		strcpy(pointer->var_list[pointer->var_count].var_name, var);
+    	pointer->var_list[pointer->var_count].type = type;
 		if (is_Array){
-			var_list[var_count].dim = dims+1;
-			var_list[var_count].pointerDepth = dims+1;
+			pointer->var_list[pointer->var_count].dim = dims+1;
+			pointer->var_list[pointer->var_count].pointerDepth = dims+1;
 			for(int i = 0; i <= dims; i++){
-				var_list[var_count].dim_bounds[i] = array_dim[i];
-				//printf("\n%d\n",var_list[var_count].dim_bounds[i]);
+				pointer->var_list[pointer->var_count].dim_bounds[i] = array_dim[i];
+				//printf("\n%d\n",pointer->var_list[var_count].dim_bounds[i]);
 			}
 			is_Array=0;
 			dims = 0;
 		}
 		else{
-			var_list[var_count].dim = 0;
+			pointer->var_list[pointer->var_count].dim = 0;
 			for(int i = 0; i < 5; i++){
-				var_list[var_count].dim_bounds[i] = -1;
+				pointer->var_list[pointer->var_count].dim_bounds[i] = -1;
 			}
 		}
 		if(ptr_depth > 0){
-			var_list[var_count].pointerDepth = ptr_depth;
+			pointer->var_list[pointer->var_count].pointerDepth = ptr_depth;
 		}
     }
     else
     {
-		char error_message[50];
+        char error_message[50];
 		strcpy(error_message, "multiple declaration of variable: ");
-    	yyerror(strcat(error_message, var));
-    	exit(0);
+		yyerror(strcat(error_message, var));
+		exit(0);
     }
 }
 int get_array_dimensions(char var[30])
 {
-	if (lookup_in_table(var)!=-1){
-		for(int i=0; i<=var_count; i++)
-		{
-			if(strcmp(var_list[i].var_name, var)==0)
-			{
-				return var_list[i].dim;
-			}
-		}
-	}
+    struct symbol_table_stack * current = pointer;
+    while(current != NULL){
+        for(int i=0; i<=current->var_count; i++)
+        {
+            if(strcmp(current->var_list[i].var_name, var)==0)
+            {
+                return current->var_list[i].dim;
+            }
+        }
+        current = current->prev;
+    }
 	printf("\n variable \"%s\" undeclared\n",var);exit(0);
 }
 void display_symbol_table(){
-	printf("\n+------------------------------SYMBOL TABLE------------------------------+\n");
-	printf("|Var name\t\tType\tPtrDepth\tDim\tDim Bounds\t |\n");
-	for(int i=0; i<=var_count; i++)
-	{
-		printf("|%s\t\t\t%d\t%d\t\t%d\t{", var_list[i].var_name, var_list[i].type, var_list[i].pointerDepth, var_list[i].dim);
-		for(int j=0; j<5; j++){
-			printf("%d ",var_list[i].dim_bounds[j]);
-		}
-		printf("}|\n");
-	}
-	printf("+------------------------------------------------------------------------+\n");
+    struct symbol_table_stack * current = pointer;
+    while(current != NULL){
+        printf("\n+------------------------------SYMBOL TABLE------------------------------+\n");
+        printf("|Var name\t\tType\tPtrDepth\tDim\tDim Bounds\t |\n");
+        for(int i=0; i<=current->var_count; i++)
+        {
+            printf("|%s\t\t\t%d\t%d\t\t%d\t{", current->var_list[i].var_name, current->var_list[i].type, current->var_list[i].pointerDepth, current->var_list[i].dim);
+            for(int j=0; j<5; j++){
+                printf("%d ",current->var_list[i].dim_bounds[j]);
+            }
+            printf("}|\n");
+        }
+        printf("+------------------------------------------------------------------------+\n");
+        current = current->prev;
+    }
 }
 int main()
 {
     yyparse();
-/*    if(success)
-    	printf("Parsing Successful\n");*/
-	display_symbol_table();
+	if(success){
+    	printf("\n Parsing Successful\n");
+	}
     return 0;
 }
 
