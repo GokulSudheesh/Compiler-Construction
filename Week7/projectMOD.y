@@ -100,7 +100,8 @@ VAR_LIST2 : VAR EQ A_EXPN {
 					yyerror("Incompatible pointer type in assignment");
 					exit(0);
 				}
-				if (!(current_data_type == 2 && $3.type == 0)){
+				if (!((current_data_type == 2 && $3.type == 0) || (current_data_type == 3 && $3.type == 0)
+				|| (current_data_type == 3 && $3.type == 2))){
 					if (current_data_type != $3.type){
 						yyerror("Incompatible types.");
 						exit(0);

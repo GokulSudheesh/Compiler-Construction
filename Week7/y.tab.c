@@ -644,14 +644,14 @@ static const yytype_int16 yyrline[] =
 {
        0,    71,    71,    71,    75,    75,    76,    76,    77,    77,
       77,    78,    79,    79,    79,    81,    82,    85,    88,    89,
-      90,    93,    96,    97,    98,   111,   116,   121,   126,   130,
-     135,   140,   141,   145,   149,   153,   158,   159,   160,   161,
-     161,   161,   161,   162,   163,   163,   164,   164,   164,   165,
-     165,   167,   167,   167,   167,   168,   168,   169,   169,   169,
-     169,   170,   170,   172,   191,   191,   192,   192,   192,   193,
-     194,   195,   195,   195,   195,   195,   195,   196,   196,   198,
-     234,   254,   259,   264,   271,   276,   281,   295,   304,   316,
-     337,   359,   371,   371,   372,   372,   373,   374,   375,   376
+      90,    93,    96,    97,    98,   112,   117,   122,   127,   131,
+     136,   141,   142,   146,   150,   154,   159,   160,   161,   162,
+     162,   162,   162,   163,   164,   164,   165,   165,   165,   166,
+     166,   168,   168,   168,   168,   169,   169,   170,   170,   170,
+     170,   171,   171,   173,   192,   192,   193,   193,   193,   194,
+     195,   196,   196,   196,   196,   196,   196,   197,   197,   199,
+     235,   255,   260,   265,   272,   277,   282,   296,   305,   317,
+     338,   360,   372,   372,   373,   373,   374,   375,   376,   377
 };
 #endif
 
@@ -1679,7 +1679,8 @@ yyreduce:
 					yyerror("Incompatible pointer type in assignment");
 					exit(0);
 				}
-				if (!(current_data_type == 2 && (yyvsp[0].EXPN_type).type == 0)){
+				if (!((current_data_type == 2 && (yyvsp[0].EXPN_type).type == 0) || (current_data_type == 3 && (yyvsp[0].EXPN_type).type == 0)
+				|| (current_data_type == 3 && (yyvsp[0].EXPN_type).type == 2))){
 					if (current_data_type != (yyvsp[0].EXPN_type).type){
 						yyerror("Incompatible types.");
 						exit(0);
@@ -1687,214 +1688,214 @@ yyreduce:
 				}
 				insert_to_table((yyvsp[-2].var_name),current_data_type);
 			}
-#line 1691 "y.tab.c"
+#line 1692 "y.tab.c"
     break;
 
   case 25:
-#line 111 "projectMOD.y"
+#line 112 "projectMOD.y"
                               {
 				//printf("<PTR_DEPTH VAR>");
 				insert_to_table((yyvsp[0].var_name),current_data_type);
 				ptr_depth = 0;
 			}
-#line 1701 "y.tab.c"
+#line 1702 "y.tab.c"
     break;
 
   case 26:
-#line 116 "projectMOD.y"
+#line 117 "projectMOD.y"
                               {
 				//printf("<MUL PTR_DEPTH>");
 				ptr_depth++;
 
 			}
-#line 1711 "y.tab.c"
+#line 1712 "y.tab.c"
     break;
 
   case 27:
-#line 121 "projectMOD.y"
+#line 122 "projectMOD.y"
                               {				
 				//printf("<MUL>");
 				ptr_depth = 0;
 				ptr_depth++;
 			}
-#line 1721 "y.tab.c"
+#line 1722 "y.tab.c"
     break;
 
   case 28:
-#line 126 "projectMOD.y"
+#line 127 "projectMOD.y"
                                   {
 		is_Array = 1;
 		insert_to_table((yyvsp[-1].var_name),current_data_type);
 	}
-#line 1730 "y.tab.c"
+#line 1731 "y.tab.c"
     break;
 
   case 29:
-#line 130 "projectMOD.y"
+#line 131 "projectMOD.y"
                                                {
 				dims++;
 				array_dim[dims] = (yyvsp[-1].integer_val);
 				//printf("<ARRAY_SIZE LSQRB %d RSQRB>", $3);
 			}
-#line 1740 "y.tab.c"
+#line 1741 "y.tab.c"
     break;
 
   case 30:
-#line 135 "projectMOD.y"
+#line 136 "projectMOD.y"
                                                  {
 				dims = 0;
 				array_dim[dims] = (yyvsp[-1].integer_val);
 				//printf("<LSQRB %d RSQRB>", $2);
 			}
-#line 1750 "y.tab.c"
+#line 1751 "y.tab.c"
     break;
 
   case 32:
-#line 141 "projectMOD.y"
+#line 142 "projectMOD.y"
                 {
 			(yyval.data_type)=(yyvsp[0].data_type);
 			current_data_type=(yyvsp[0].data_type);
 		}
-#line 1759 "y.tab.c"
+#line 1760 "y.tab.c"
     break;
 
   case 33:
-#line 145 "projectMOD.y"
+#line 146 "projectMOD.y"
                 {
 			(yyval.data_type)=(yyvsp[0].data_type);
 			current_data_type=(yyvsp[0].data_type);
 		}
-#line 1768 "y.tab.c"
+#line 1769 "y.tab.c"
     break;
 
   case 34:
-#line 149 "projectMOD.y"
+#line 150 "projectMOD.y"
                 {
 			(yyval.data_type)=(yyvsp[0].data_type);
 			current_data_type=(yyvsp[0].data_type);
 		}
-#line 1777 "y.tab.c"
+#line 1778 "y.tab.c"
     break;
 
   case 35:
-#line 153 "projectMOD.y"
+#line 154 "projectMOD.y"
                  {
 			(yyval.data_type)=(yyvsp[0].data_type);
 			current_data_type=(yyvsp[0].data_type);
 		}
-#line 1786 "y.tab.c"
+#line 1787 "y.tab.c"
     break;
 
   case 39:
-#line 161 "projectMOD.y"
+#line 162 "projectMOD.y"
                                                                {push_table();}
-#line 1792 "y.tab.c"
+#line 1793 "y.tab.c"
     break;
 
   case 40:
-#line 161 "projectMOD.y"
+#line 162 "projectMOD.y"
                                                                                          {pop_table();}
-#line 1798 "y.tab.c"
+#line 1799 "y.tab.c"
     break;
 
   case 41:
-#line 161 "projectMOD.y"
+#line 162 "projectMOD.y"
                                                                                                                   {push_table();}
-#line 1804 "y.tab.c"
+#line 1805 "y.tab.c"
     break;
 
   case 42:
-#line 161 "projectMOD.y"
+#line 162 "projectMOD.y"
                                                                                                                                             {pop_table();}
-#line 1810 "y.tab.c"
+#line 1811 "y.tab.c"
     break;
 
   case 44:
-#line 163 "projectMOD.y"
+#line 164 "projectMOD.y"
                                                                {push_table();}
-#line 1816 "y.tab.c"
+#line 1817 "y.tab.c"
     break;
 
   case 45:
-#line 163 "projectMOD.y"
+#line 164 "projectMOD.y"
                                                                                          {pop_table();}
-#line 1822 "y.tab.c"
+#line 1823 "y.tab.c"
     break;
 
   case 46:
-#line 164 "projectMOD.y"
+#line 165 "projectMOD.y"
                                          {push_table();}
-#line 1828 "y.tab.c"
+#line 1829 "y.tab.c"
     break;
 
   case 47:
-#line 164 "projectMOD.y"
+#line 165 "projectMOD.y"
                                                                    {pop_table();}
-#line 1834 "y.tab.c"
+#line 1835 "y.tab.c"
     break;
 
   case 49:
-#line 165 "projectMOD.y"
+#line 166 "projectMOD.y"
                                                                                                       {push_table();}
-#line 1840 "y.tab.c"
+#line 1841 "y.tab.c"
     break;
 
   case 50:
-#line 165 "projectMOD.y"
+#line 166 "projectMOD.y"
                                                                                                                                 {pop_table();}
-#line 1846 "y.tab.c"
+#line 1847 "y.tab.c"
     break;
 
   case 55:
-#line 168 "projectMOD.y"
+#line 169 "projectMOD.y"
                                          {push_table();}
-#line 1852 "y.tab.c"
+#line 1853 "y.tab.c"
     break;
 
   case 56:
-#line 168 "projectMOD.y"
+#line 169 "projectMOD.y"
                                                                    {pop_table();}
-#line 1858 "y.tab.c"
+#line 1859 "y.tab.c"
     break;
 
   case 57:
-#line 169 "projectMOD.y"
+#line 170 "projectMOD.y"
                                                    {push_table();}
-#line 1864 "y.tab.c"
+#line 1865 "y.tab.c"
     break;
 
   case 58:
-#line 169 "projectMOD.y"
+#line 170 "projectMOD.y"
                                                                              {pop_table();}
-#line 1870 "y.tab.c"
+#line 1871 "y.tab.c"
     break;
 
   case 59:
-#line 169 "projectMOD.y"
+#line 170 "projectMOD.y"
                                                                                                                                                {push_table();}
-#line 1876 "y.tab.c"
+#line 1877 "y.tab.c"
     break;
 
   case 60:
-#line 169 "projectMOD.y"
+#line 170 "projectMOD.y"
                                                                                                                                                                          {pop_table();}
-#line 1882 "y.tab.c"
+#line 1883 "y.tab.c"
     break;
 
   case 61:
-#line 170 "projectMOD.y"
+#line 171 "projectMOD.y"
                           {push_table();}
-#line 1888 "y.tab.c"
+#line 1889 "y.tab.c"
     break;
 
   case 62:
-#line 170 "projectMOD.y"
+#line 171 "projectMOD.y"
                                                     {pop_table();}
-#line 1894 "y.tab.c"
+#line 1895 "y.tab.c"
     break;
 
   case 63:
-#line 173 "projectMOD.y"
+#line 174 "projectMOD.y"
                                 {
 					if((yyvsp[-2].EXPN_type).type!=(yyvsp[0].EXPN_type).type)
 					{
@@ -1912,11 +1913,11 @@ yyreduce:
 						exit(0);
 					}	
 				}
-#line 1916 "y.tab.c"
+#line 1917 "y.tab.c"
     break;
 
   case 79:
-#line 199 "projectMOD.y"
+#line 200 "projectMOD.y"
                                 {	
 					(yyval.EXPN_type).isValue=1;
 					if((yyvsp[-2].EXPN_type).data_depth==(yyvsp[0].EXPN_type).data_depth)
@@ -1951,11 +1952,11 @@ yyreduce:
 						exit(0);						
 					}
 				}
-#line 1955 "y.tab.c"
+#line 1956 "y.tab.c"
     break;
 
   case 80:
-#line 235 "projectMOD.y"
+#line 236 "projectMOD.y"
                                 {
 					if((yyvsp[-2].EXPN_type).type!=(yyvsp[0].EXPN_type).type)
 					{
@@ -1975,31 +1976,31 @@ yyreduce:
 					(yyval.EXPN_type).data_depth=0;
 					(yyval.EXPN_type).type=(yyvsp[-2].EXPN_type).type;	
 				}
-#line 1979 "y.tab.c"
+#line 1980 "y.tab.c"
     break;
 
   case 81:
-#line 254 "projectMOD.y"
+#line 255 "projectMOD.y"
                                {
 			(yyval.EXPN_type).isValue = (yyvsp[-1].EXPN_type).isValue;
 			(yyval.EXPN_type).data_depth = (yyvsp[-1].EXPN_type).data_depth;
 			(yyval.EXPN_type).type = (yyvsp[-1].EXPN_type).type;
 		}
-#line 1989 "y.tab.c"
+#line 1990 "y.tab.c"
     break;
 
   case 82:
-#line 259 "projectMOD.y"
+#line 260 "projectMOD.y"
                                 {
 			(yyval.EXPN_type).type=(yyvsp[0].EXPN_type).type;
 			(yyval.EXPN_type).data_depth=(yyvsp[0].EXPN_type).data_depth;	
 			(yyval.EXPN_type).isValue=1;
 		}
-#line 1999 "y.tab.c"
+#line 2000 "y.tab.c"
     break;
 
   case 83:
-#line 264 "projectMOD.y"
+#line 265 "projectMOD.y"
                       {
 			struct symbol_table column = get_column((yyvsp[0].var_name));
 			(yyval.EXPN_type).type = column.type;
@@ -2007,31 +2008,31 @@ yyreduce:
 			(yyval.EXPN_type).isValue = 0;
 			strcpy((yyval.EXPN_type).var_name, (yyvsp[0].var_name));
 		}
-#line 2011 "y.tab.c"
+#line 2012 "y.tab.c"
     break;
 
   case 84:
-#line 271 "projectMOD.y"
+#line 272 "projectMOD.y"
                              {
 			(yyval.EXPN_type).type = 0;
 			(yyval.EXPN_type).data_depth = 0;	
 			(yyval.EXPN_type).isValue = 1;
 		}
-#line 2021 "y.tab.c"
+#line 2022 "y.tab.c"
     break;
 
   case 85:
-#line 276 "projectMOD.y"
+#line 277 "projectMOD.y"
                                {
 			(yyval.EXPN_type).type = 2;
 			(yyval.EXPN_type).data_depth = 0;	
 			(yyval.EXPN_type).isValue = 1;
 		}
-#line 2031 "y.tab.c"
+#line 2032 "y.tab.c"
     break;
 
   case 86:
-#line 282 "projectMOD.y"
+#line 283 "projectMOD.y"
                         {
 				if((yyvsp[0].EXPN_type).data_depth==0)
 				{
@@ -2045,11 +2046,11 @@ yyreduce:
 					(yyval.EXPN_type).isValue=0;
 				}										
 			}
-#line 2049 "y.tab.c"
+#line 2050 "y.tab.c"
     break;
 
   case 87:
-#line 295 "projectMOD.y"
+#line 296 "projectMOD.y"
                                {
 			if(dims!=get_array_dimensions((yyvsp[0].EXPN_type).var_name)){
 				printf("\n Error: Indexing error in array: %s\n", (yyvsp[0].EXPN_type).var_name);exit(0);
@@ -2059,11 +2060,11 @@ yyreduce:
 			(yyval.EXPN_type).isValue=0;
 			dims=0;
 		}
-#line 2063 "y.tab.c"
+#line 2064 "y.tab.c"
     break;
 
   case 88:
-#line 305 "projectMOD.y"
+#line 306 "projectMOD.y"
                         {		
 				if((yyvsp[0].EXPN_type).isValue==1)
 				{
@@ -2074,11 +2075,11 @@ yyreduce:
 				(yyval.EXPN_type).data_depth=(yyvsp[0].EXPN_type).data_depth+1;
 				(yyval.EXPN_type).isValue=1;						
 			}
-#line 2078 "y.tab.c"
+#line 2079 "y.tab.c"
     break;
 
   case 89:
-#line 317 "projectMOD.y"
+#line 318 "projectMOD.y"
                         {	
 				dims++;
 				if((yyvsp[-1].EXPN_type).data_depth!=0 || (yyvsp[-1].EXPN_type).type!=0)
@@ -2099,11 +2100,11 @@ yyreduce:
 					strcpy((yyval.EXPN_type).var_name, (yyvsp[-3].EXPN_type).var_name);
 				}
 			}
-#line 2103 "y.tab.c"
+#line 2104 "y.tab.c"
     break;
 
   case 90:
-#line 337 "projectMOD.y"
+#line 338 "projectMOD.y"
                                                 {
 				struct symbol_table column = get_column((yyvsp[-3].var_name));
 				dims++;
@@ -2125,11 +2126,11 @@ yyreduce:
 					strcpy((yyval.EXPN_type).var_name, (yyvsp[-3].var_name));
 				}
 			}
-#line 2129 "y.tab.c"
+#line 2130 "y.tab.c"
     break;
 
   case 91:
-#line 359 "projectMOD.y"
+#line 360 "projectMOD.y"
                                        {
 				if((yyval.EXPN_type).isValue==1)
 				{
@@ -2141,35 +2142,35 @@ yyreduce:
 					(yyval.EXPN_type).isValue=1;
 				}
 			}
-#line 2145 "y.tab.c"
+#line 2146 "y.tab.c"
     break;
 
   case 96:
-#line 373 "projectMOD.y"
+#line 374 "projectMOD.y"
                {current_operator='/';}
-#line 2151 "y.tab.c"
+#line 2152 "y.tab.c"
     break;
 
   case 97:
-#line 374 "projectMOD.y"
+#line 375 "projectMOD.y"
                       {current_operator='*';}
-#line 2157 "y.tab.c"
+#line 2158 "y.tab.c"
     break;
 
   case 98:
-#line 375 "projectMOD.y"
+#line 376 "projectMOD.y"
                       {current_operator='^';}
-#line 2163 "y.tab.c"
+#line 2164 "y.tab.c"
     break;
 
   case 99:
-#line 376 "projectMOD.y"
+#line 377 "projectMOD.y"
                       {current_operator='%'; is_modulus = 1;}
-#line 2169 "y.tab.c"
+#line 2170 "y.tab.c"
     break;
 
 
-#line 2173 "y.tab.c"
+#line 2174 "y.tab.c"
 
       default: break;
     }
@@ -2401,7 +2402,7 @@ yyreturn:
 #endif
   return yyresult;
 }
-#line 378 "projectMOD.y"
+#line 379 "projectMOD.y"
 
 
 void push_table(){
