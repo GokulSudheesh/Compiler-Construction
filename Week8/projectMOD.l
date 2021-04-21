@@ -21,6 +21,8 @@
 "char" {yylval.data_type=1; return CHAR;}
 "float" {yylval.data_type=2; return FLOAT;}
 "double" {yylval.data_type=3; return DOUBLE;}
+"printf" {return PRINTF;}
+"scanf" {return SCANF;}
 "main" {return MAIN;}
 "#" {return HASH;}
 "("	{return LB;}
@@ -53,6 +55,7 @@
 "!" {return NOT;}
 [\"] {return DQUOTE;}
 \/\/(.*) {/*Single line comment*/};	
+\"([^\\\"]|\\.)*\" {strcpy(yylval.q_string,yytext); return Q_STRING;}
 ([A-Z]+|[a-z]+)([A-Z]+|[a-z]+|[0-9]+)* {strcpy(yylval.var_name,yytext);return VAR;}
 [0-9]+ {yylval.integer_val = atoi(yytext); return INT_NUMBER;}
 [0-9]+(\.[0-9]+) {yylval.float_val = atof(yytext); return FLOAT_NUMBER;}

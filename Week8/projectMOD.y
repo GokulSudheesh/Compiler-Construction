@@ -13,6 +13,9 @@
 	int dims;
 	int array_dim[5];
 	int ptr_depth;
+	int array_format_spec[20];
+	int format_spec_counter=0;
+	int RWmode; // 1 -> read mode, 2 -> write mode
 	
 	struct symbol_table{char var_name[30]; int type; int dim; int pointerDepth; int dim_bounds[5];};
 	struct symbol_table_stack{
@@ -30,6 +33,7 @@
 	extern void insert_to_table(char var[30], int type);
 	extern int get_array_dimensions(char var[30]);
 	extern void display_symbol_table();
+	extern void format_string(char str[200]);
 %}
 
 %union{
@@ -37,6 +41,7 @@ int data_type;
 char var_name[30];
 int integer_val;
 float float_val;
+char q_string[200];
 struct 
 	{
 		char var_name[30];
@@ -45,7 +50,8 @@ struct
 		int isValue;
 	}EXPN_type;
 }
-%token HASH INCLUDE HEADER_FILE MAIN LB RB LCB RCB LSQRB RSQRB SC COLON QMARK COMA IF ELSE_IF ELSE FOR DO WHILE ET EQ GT LT GTE LTE NE AMPER OR NOT DQUOTE PLUS MINUS MUL DIV MOD EXP UPLUS UMINUS
+%token HASH INCLUDE HEADER_FILE MAIN LB RB LCB RCB LSQRB RSQRB SC COLON QMARK COMA IF ELSE_IF ELSE FOR DO 
+%token WHILE PRINTF SCANF ET EQ GT LT GTE LTE NE AMPER OR NOT DQUOTE PLUS MINUS MUL DIV MOD EXP UPLUS UMINUS
 
 %left PLUS MINUS
 %left MUL DIV MOD
@@ -60,6 +66,7 @@ struct
 %token<var_name>VAR
 %token<integer_val>INT_NUMBER
 %token<float_val>FLOAT_NUMBER
+%token<q_string>Q_STRING
 %type<data_type>DATA_TYPE
 %type<EXPN_type>A_EXPN
 %type<EXPN_type>ARRAY_ACCESS
@@ -100,7 +107,8 @@ VAR_LIST2 : VAR EQ A_EXPN {
 					yyerror("Incompatible pointer type in assignment");
 					exit(0);
 				}
-				if (!(current_data_type == 2 && $3.type == 0)){
+				if (!((current_data_type == 2 && $3.type == 0) || (current_data_type == 3 && $3.type == 0)
+				|| (current_data_type == 3 && $3.type == 2))){
 					if (current_data_type != $3.type){
 						yyerror("Incompatible types.");
 						exit(0);
@@ -157,12 +165,71 @@ DATA_TYPE : INT {
  
 PROGRAM_STATEMENTS :	ASSIGNMENT_STATEMENT SC
 				| SC
+				| WRITE_STATEMENT
+				| READ_STATEMENT
 				| INCR_DCR_EXPN SC
 				| LB LOGICAL_EXPN RB QMARK LCB {push_table();} BODY2 RCB {pop_table();} COLON LCB {push_table();} BODY2 RCB {pop_table();}
 				| CONDITIONAL_STATEMENTS
 				| WHILE LB LOGICAL_EXPN RB LCB {push_table();} BODY2 RCB {pop_table();}
 				| DO LCB {push_table();} BODY2 RCB {pop_table();} WHILE LB LOGICAL_EXPN RB SC
 				| FOR LB ASSIGNMENT_STATEMENT SC LOGICAL_EXPN SC INCR_DCR_EXPN RB LCB {push_table();} BODY2 RCB {pop_table();}
+
+WRITE_STATEMENT : PRINTF LB Q_STRING {RWmode = 2; format_string($3);} RB SC {
+					RWmode = 0;
+					if(format_spec_counter!=0){
+						yyerror("More arguments expected to printf function."); exit(0);
+					}
+				} 
+				| PRINTF LB Q_STRING {RWmode = 2; format_string($3);} COMA VAR_LIST_OP RB SC {
+					//printf("%d",format_spec_counter);
+					RWmode = 0;
+					if(format_spec_counter != 0){
+						printf("Parsing Failed\nLine Number %d: %d more arguments required.\n", yylineno, format_spec_counter);
+						exit(0);
+					}
+				}
+VAR_LIST_OP : A_EXPN COMA VAR_LIST_OP {
+				//printf("<A_EXPN COMA VAR_LIST_OP>");
+				if(array_format_spec[--format_spec_counter] == 4){
+					if($1.data_depth != 1 || $1.type != 1){
+						yyerror("Format '%s' expects argument of type 'char *'"); exit(0);
+					}
+				}
+				else if (array_format_spec[format_spec_counter] != $1.type){
+					yyerror("Type mismatch in arguments."); exit(0);
+				}			
+			}
+			| A_EXPN {
+				//printf("<A_EXPN>");
+				if(array_format_spec[--format_spec_counter] == 4){
+					if($1.data_depth != 1 || $1.type != 1){
+						yyerror("Format '%s' expects argument of type 'char *'"); exit(0);
+					}
+				}
+				else if (array_format_spec[format_spec_counter] != $1.type){
+					yyerror("Type mismatch in arguments."); exit(0);
+				}				
+			}
+
+READ_STATEMENT : SCANF LB Q_STRING {RWmode = 1; format_string($3);} COMA VAR_LIST_IP RB SC {RWmode = 0;}
+VAR_LIST_IP : A_EXPN COMA VAR_LIST_IP {
+				//printf("<A_EXPN COMA VAR_LIST_IP>");
+				if (array_format_spec[--format_spec_counter] != $1.type){
+					yyerror("Type mismatch in arguments."); exit(0);
+				}
+				else if ($1.data_depth != 1){
+					yyerror("Error in reference depth."); exit(0);
+				}		
+			}
+			| A_EXPN {
+				//printf("<A_EXPN>");
+				if (array_format_spec[--format_spec_counter] != $1.type){
+					yyerror("Type mismatch in arguments."); exit(0);
+				}
+				else if ($1.data_depth != 1){
+					yyerror("Error in reference depth."); exit(0);
+				}				
+			}
 
 CONDITIONAL_STATEMENTS : IF_STATEMENT | IF_STATEMENT ELSE_STATEMENT | IF_STATEMENT ELSE_IF_STATEMENT | IF_STATEMENT ELSE_IF_STATEMENT ELSE_STATEMENT
 IF_STATEMENT : IF LB LOGICAL_EXPN RB LCB {push_table();} BODY2 RCB {pop_table();}
@@ -293,7 +360,7 @@ A_EXPN	: A_EXPN OPR_PREC1 A_EXPN
 				}										
 			}
 		| ARRAY_ACCESS {
-			if(dims!=get_array_dimensions($1.var_name)){
+			if(dims!=get_array_dimensions($1.var_name) && (RWmode == 0)){
 				printf("\n Error: Indexing error in array: %s\n", $1.var_name);exit(0);
 			}
 			$$.type=$1.type;
@@ -507,6 +574,30 @@ void display_symbol_table(){
         }
         printf("+------------------------------------------------------------------------+\n");
         current = current->prev;
+    }
+}
+void format_string(char str[200]){
+    format_spec_counter = 0;
+    char specifiers[5] = {'d','c','f','l','s'};
+    int i = 0;
+    while(str[i]!='\0'){
+        if(str[i] == '%'){
+            //printf(" %c%c ",str[i],str[i+1]);
+			if (RWmode == 1 && str[i+1]=='s'){
+				array_format_spec[format_spec_counter] = 1;
+                format_spec_counter++;	
+			}
+			else{
+				for (int j=0;j<5;j++){
+					if(str[i+1]==specifiers[j]){
+						array_format_spec[format_spec_counter] = j; //j will act as type-> 0 for int, 1 for char etc
+						format_spec_counter++;
+						break;
+					}
+				}
+			}
+        }
+        i++;
     }
 }
 int main()
