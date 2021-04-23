@@ -80,8 +80,7 @@ prm	: HEADERS MAIN_TYPE MAIN LB RB LCB {push_table();} BODY RCB {
 							success=1;
 						   }
 HEADERS : HEADER HEADERS | HEADER
-HEADER	: HASH INCLUDE LT HEADER_FILE GT | HASH INCLUDE DQUOTE HEADER2 HEADER_FILE DQUOTE
-HEADER2 :  HEADER2 VAR DIV {/*printf("<HEADER2 VAR DIV>");*/} | DIV {/*printf("<DIV>");*/} | /*Epsilon*/ {/*printf("<HEADER2->Epsilon>");*/}
+HEADER	: HASH INCLUDE LT HEADER_FILE GT | HASH INCLUDE Q_STRING {format_string($3);}
 BODY	: DECLARATION_STATEMENTS BODY2
 BODY2	: /*Epsilon*/ | DECLARATION_STATEMENTS BODY2 | PROGRAM_STATEMENTS BODY2
 
@@ -576,28 +575,39 @@ void display_symbol_table(){
     }
 }
 void format_string(char str[200]){
-    format_spec_counter = 0;
-    char specifiers[5] = {'d','c','f','l','s'};
-    int i = 0;
-    while(str[i]!='\0'){
-        if(str[i] == '%'){
-            //printf(" %c%c ",str[i],str[i+1]);
-			if (RWmode == 1 && str[i+1]=='s'){
-				array_format_spec[format_spec_counter] = 1;
-                format_spec_counter++;	
-			}
-			else{
-				for (int j=0;j<5;j++){
-					if(str[i+1]==specifiers[j]){
-						array_format_spec[format_spec_counter] = j; //j will act as type-> 0 for int, 1 for char etc
-						format_spec_counter++;
-						break;
+	if (RWmode == 0){ //for Header Files
+		int i = 0;
+		while(str[i]!='\0'){
+			i++;
+		}
+		if (str[i-3]!='.' && str[i-2]!='h'){
+			yyerror("Invalid format for header file.");exit(0);
+		}
+	}
+	else{
+		format_spec_counter = 0;
+		char specifiers[5] = {'d','c','f','l','s'};
+		int i = 0;
+		while(str[i]!='\0'){
+			if(str[i] == '%'){
+				//printf(" %c%c ",str[i],str[i+1]);
+				if (RWmode == 1 && str[i+1]=='s'){
+					array_format_spec[format_spec_counter] = 1;
+					format_spec_counter++;	
+				}
+				else{
+					for (int j=0;j<5;j++){
+						if(str[i+1]==specifiers[j]){
+							array_format_spec[format_spec_counter] = j; //j will act as type-> 0 for int, 1 for char etc
+							format_spec_counter++;
+							break;
+						}
 					}
 				}
 			}
-        }
-        i++;
-    }
+			i++;
+		}
+	}
 }
 int main()
 {
