@@ -19,6 +19,7 @@
 "do"	{return DO;}
 "while"	{return WHILE;}
 "@" {return AT;}
+"void" {return VOID;}
 "int"	{yylval.data_type=0;return INT;}
 "char" {yylval.data_type=1; return CHAR;}
 "float" {yylval.data_type=2; return FLOAT;}

@@ -5,7 +5,7 @@
 	int yylex(void);
 	int yyerror(const char *s);
 	int yylineno;
-	struct Variables{char var_name[30];int is_Array;int dims;int array_dim[5];int ptr_depth;}var_list[20];
+	struct Variables{char var_name[30];int is_Array;int dims;int array_dim[5];int ptr_depth;int LHS_type;}var_list[20];
 	int var_list_ind = 0;
 	int success = 0;
 	int current_data_type;
@@ -20,6 +20,7 @@
 	struct symbol_table_stack{
     	struct symbol_table var_list[100];
     	int var_count;
+		int ind_level;
     	struct symbol_table_stack * prev;
     	struct symbol_table_stack * next;
 	};
@@ -33,6 +34,7 @@
 	extern int get_array_dimensions(char var[30]);
 	extern void display_symbol_table();
 	extern void format_string(char str[200]);
+	extern void check_ind(int current_ind);
 %}
 
 %union{
@@ -50,7 +52,7 @@
 			int isValue;
 		}EXPN_type;
 }
-%token HASH INCLUDE HEADER_FILE AT MAIN TAB LB RB LCB RCB LSQRB RSQRB SC COLON QMARK COMA IF ELSE_IF ELSE FOR DO 
+%token HASH INCLUDE HEADER_FILE AT MAIN VOID TAB LB RB LCB RCB LSQRB RSQRB SC COLON QMARK COMA IF ELSE_IF ELSE FOR DO 
 %token WHILE PRINTF SCANF ET EQ GT LT GTE LTE NE AMPER OR NOT DQUOTE PLUS MINUS MUL DIV MOD EXP UPLUS UMINUS
 
 %left PLUS MINUS
@@ -76,21 +78,32 @@
 %start prm
 
 %%
-prm	: HEADERS MAIN_TYPE MAIN LB RB COLON {push_table();} BODY{
+prm	: HEADERS MAIN_TYPE AT MAIN LB RB COLON {push_table();} BODY{
 							pop_table();
 							success=1;
 						   }
 HEADERS : HEADER HEADERS | HEADER
 HEADER	: HASH INCLUDE LT HEADER_FILE GT | HASH INCLUDE Q_STRING {format_string($3);}
-BODY	: INDENTATION {printf("Level %d\n", $1);} DECLARATION_STATEMENTS BODY2
-BODY2	: /*Epsilon*/ | INDENTATION {printf("Level %d\n", $1);} DECLARATION_STATEMENTS BODY2 | INDENTATION {printf("Level %d\n", $1);} PROGRAM_STATEMENTS BODY2
+BODY	: INDENTATION {printf("Level %d\n", $1);check_ind($1);} DECLARATION_STATEMENTS BODY2
+BODY2	: /*Epsilon*/ | INDENTATION {printf("Level %d\n", $1);check_ind($1);} DECLARATION_STATEMENTS BODY2 | INDENTATION {printf("Level %d\n", $1);check_ind($1);} PROGRAM_STATEMENTS BODY2
 
 DECLARATION_STATEMENTS: AT VAR_LIST COLON COLON DATA_TYPE{
+						
 						for(int i = 0; i < var_list_ind; i++){
+							if(var_list[i].LHS_type > 0){
+								if (!((current_data_type == 2 && var_list[i].LHS_type == 1) || (current_data_type == 3 && var_list[i].LHS_type == 1)
+								|| (current_data_type == 3 && var_list[i].LHS_type == 3))){
+									if (current_data_type+1 != var_list[i].LHS_type){
+										yyerror("Incompatible types.");
+										exit(0);
+									}
+								}
+							}
 							insert_to_table(var_list[i].var_name, current_data_type, var_list[i].is_Array, var_list[i].dims, var_list[i].ptr_depth, var_list[i].array_dim);
 						}
 						var_list_ind = 0;
 						for(int i = 0; i< 20; i++){
+							var_list[i].LHS_type = 0;
 							if (var_list[i].is_Array){
 								var_list[i].is_Array = 0;
 								var_list[i].dims = 0;
@@ -126,14 +139,9 @@ VAR_LIST2 : VAR EQ A_EXPN {
 					yyerror("Incompatible pointer type in assignment");
 					exit(0);
 				}
-				if (!((current_data_type == 2 && $3.type == 0) || (current_data_type == 3 && $3.type == 0)
-				|| (current_data_type == 3 && $3.type == 2))){
-					if (current_data_type != $3.type){
-						yyerror("Incompatible types.");
-						exit(0);
-					}
-				}
+				
 				strcpy(var_list[var_list_ind].var_name,$1);
+				var_list[var_list_ind].LHS_type = $3.type+1;
 				var_list_ind++;
 			}
 PTR_VAR :	PTR_DEPTH VAR {
@@ -169,7 +177,7 @@ ARRAY_SIZE : ARRAY_SIZE LSQRB INT_NUMBER RSQRB {
 				var_list[var_list_ind].array_dim[var_list[var_list_ind].dims] = $2;
 				//printf("<LSQRB %d RSQRB>", $2);
 			}
-MAIN_TYPE : INT
+MAIN_TYPE : INT | VOID
 DATA_TYPE : INT {
 			$$=$1;
 			current_data_type=$1;
@@ -187,23 +195,23 @@ DATA_TYPE : INT {
 			current_data_type=$1;
 		}
  
-PROGRAM_STATEMENTS :	ASSIGNMENT_STATEMENT SC
-				| SC
+PROGRAM_STATEMENTS :	ASSIGNMENT_STATEMENT
 				| READ_STATEMENT
-				| INCR_DCR_EXPN SC
+				| INCR_DCR_EXPN
 				| LB LOGICAL_EXPN RB QMARK LCB {push_table();} BODY2 RCB {pop_table();} COLON LCB {push_table();} BODY2 RCB {pop_table();}
 				| CONDITIONAL_STATEMENTS
-				| WHILE LB LOGICAL_EXPN RB LCB {push_table();} BODY2 RCB {pop_table();}
-				| DO LCB {push_table();} BODY2 RCB {pop_table();} WHILE LB LOGICAL_EXPN RB SC
-				| FOR LB ASSIGNMENT_STATEMENT SC LOGICAL_EXPN SC INCR_DCR_EXPN RB LCB {push_table();} BODY2 RCB {pop_table();}
+				| WHILE LB LOGICAL_EXPN RB COLON {push_table();} BODY2 //RCB {pop_table();}
+				| DO COLON {push_table();} BODY2 WHILE LB LOGICAL_EXPN RB
+				| FOR LB ASSIGNMENT_STATEMENT COMA LOGICAL_EXPN COMA INCR_DCR_EXPN RB COLON {push_table();} BODY2 //RCB {pop_table();}
+				| FOR LB DECLARATION_STATEMENTS COMA LOGICAL_EXPN COMA INCR_DCR_EXPN RB COLON {push_table();} BODY2
 
-WRITE_STATEMENT : PRINTF LB Q_STRING {RWmode = 2; format_string($3);} RB SC {
+WRITE_STATEMENT : PRINTF LB Q_STRING {RWmode = 2; format_string($3);} RB{
 					RWmode = 0;
 					if(format_spec_counter!=0){
 						yyerror("More arguments expected to printf function."); exit(0);
 					}
 				} 
-				| PRINTF LB Q_STRING {RWmode = 2; format_string($3);} COMA VAR_LIST_OP RB SC {
+				| PRINTF LB Q_STRING {RWmode = 2; format_string($3);} COMA VAR_LIST_OP RB{
 					//printf("%d",format_spec_counter);
 					RWmode = 0;
 					if(format_spec_counter != 0){
@@ -234,7 +242,7 @@ VAR_LIST_OP : A_EXPN COMA VAR_LIST_OP {
 				}				
 			}
 
-READ_STATEMENT : SCANF LB Q_STRING {RWmode = 1; format_string($3);} COMA VAR_LIST_IP RB SC {RWmode = 0;}
+READ_STATEMENT : SCANF LB Q_STRING {RWmode = 1; format_string($3);} COMA VAR_LIST_IP RB{RWmode = 0;}
 VAR_LIST_IP : A_EXPN COMA VAR_LIST_IP {
 				//printf("<A_EXPN COMA VAR_LIST_IP>");
 				if (array_format_spec[--format_spec_counter] != $1.type){
@@ -255,9 +263,9 @@ VAR_LIST_IP : A_EXPN COMA VAR_LIST_IP {
 			}
 
 CONDITIONAL_STATEMENTS : IF_STATEMENT | IF_STATEMENT ELSE_STATEMENT | IF_STATEMENT ELSE_IF_STATEMENT | IF_STATEMENT ELSE_IF_STATEMENT ELSE_STATEMENT
-IF_STATEMENT : IF LB LOGICAL_EXPN RB LCB {push_table();} BODY2 RCB {pop_table();}
-ELSE_IF_STATEMENT : ELSE_IF LB LOGICAL_EXPN RB LCB {push_table();} BODY2 RCB {pop_table();} | ELSE_IF_STATEMENT ELSE_IF LB LOGICAL_EXPN RB LCB {push_table();} BODY2 RCB {pop_table();}
-ELSE_STATEMENT : ELSE LCB {push_table();} BODY2 RCB {pop_table();}
+IF_STATEMENT : IF LB LOGICAL_EXPN RB COLON {push_table();} BODY2 //RCB {pop_table();}
+ELSE_IF_STATEMENT : ELSE_IF LB LOGICAL_EXPN RB COLON {push_table();} BODY2 /*RCB {pop_table();}*/ | ELSE_IF_STATEMENT ELSE_IF LB LOGICAL_EXPN RB COLON {push_table();} BODY2 //RCB {pop_table();}
+ELSE_STATEMENT : ELSE COLON {push_table();} BODY2 //RCB {pop_table();}
 
 ASSIGNMENT_STATEMENT : A_EXPN EQ A_EXPN
 				{
@@ -474,9 +482,11 @@ void push_table(){
     node->var_count = -1;
     
     if(pointer == NULL){
+		node->ind_level = 1;
         pointer = node;
     }
     else{
+		node->ind_level = pointer->ind_level + 1;
         pointer->next = node;
         node->prev = pointer;
         pointer = node;
@@ -634,6 +644,14 @@ void format_string(char str[200]){
 			}
 			i++;
 		}
+	}
+}
+void check_ind(int current_ind){
+	if(current_ind == pointer->ind_level - 1){
+		pop_table();
+	}
+	if(current_ind != pointer->ind_level){
+		yyerror("Indentation Error");exit(0);
 	}
 }
 int main()
