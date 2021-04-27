@@ -15,6 +15,9 @@
 	int format_spec_counter=0;
 	int RWmode; // 1 -> read mode, 2 -> write mode
 	int dims;
+
+	struct functions{char func_name[30]; int type; int paras; int para_types[10];}func_list[100];
+	int func_count = -1; 
 	
 	struct symbol_table{char var_name[30]; int type; int dim; int pointerDepth; int dim_bounds[5];};
 	struct symbol_table_stack{
@@ -52,7 +55,7 @@
 			int isValue;
 		}EXPN_type;
 }
-%token HASH INCLUDE HEADER_FILE AT MAIN VOID TAB LB RB LCB RCB LSQRB RSQRB SC COLON QMARK COMA IF ELSE_IF ELSE FOR DO 
+%token HASH INCLUDE HEADER_FILE AT MAIN VOID RETURN TAB LB RB LCB RCB LSQRB RSQRB SC COLON QMARK COMA IF ELSE_IF ELSE FOR DO 
 %token WHILE PRINTF SCANF ET EQ GT LT GTE LTE NE AMPER OR NOT DQUOTE PLUS MINUS MUL DIV MOD EXP UPLUS UMINUS
 
 %left PLUS MINUS
@@ -82,12 +85,31 @@ prm	: HEADERS FUNCTIONS MAIN_FUNC_BODY{success=1;}
 HEADERS : HEADER HEADERS | HEADER
 HEADER	: HASH INCLUDE LT HEADER_FILE GT | HASH INCLUDE Q_STRING {format_string($3);}
 
-FUNCTIONS : FUNCTION_BODY | FUNCTION_BODY FUNCTIONS | {/*Epsilon*/}
-FUNCTION_BODY : DATA_TYPE AT VAR LB RB COLON {push_table();} BODY {pop_table();}
+FUNCTIONS : FUNCTION_BODY | FUNCTION_BODY FUNCTIONS {/*Epsilon*/}
+FUNCTION_BODY : DATA_TYPE AT VAR {func_count++; strcpy(func_list[func_count].func_name, $3); func_list[func_count].type = current_data_type;}
+			FUNC_PARAM BODY RETURN A_EXPN {
+				if($8.type != func_list[func_count].type || $8.data_depth != 0){
+					yyerror("Return type does not match function type.");exit(0);
+				}
+				pop_table();
+				pointer = NULL;
+			}
+
+FUNC_PARAM : LB FUNC_PARAS RB COLON {push_table();}
+
+FUNC_PARAS : DATA_TYPE VAR COMA FUNC_PARAS {
+				func_list[func_count].para_types[func_list[func_count].paras] = current_data_type;
+				func_list[func_count].paras++;
+			} 
+			| DATA_TYPE VAR {
+				func_list[func_count].para_types[func_list[func_count].paras] = current_data_type;
+				func_list[func_count].paras++;
+			}
+			| {/*Epsilon*/}
 MAIN_FUNC_BODY : MAIN_TYPE AT MAIN LB RB COLON {push_table();} BODY {pop_table();}
 
-BODY	: INDENTATION {/*printf("Level %d\n", $1);*/check_ind($1);} DECLARATION_STATEMENTS BODY2
-BODY2	: /*Epsilon*/ | INDENTATION {/*printf("Level %d\n", $1);*/check_ind($1);} DECLARATION_STATEMENTS BODY2 | INDENTATION {/*printf("Level %d\n", $1);*/check_ind($1);} PROGRAM_STATEMENTS BODY2
+BODY	: INDENTATION {printf("Level %d\n", $1);check_ind($1);} DECLARATION_STATEMENTS BODY2
+BODY2	: /*Epsilon*/ | INDENTATION {printf("Level %d\n", $1);check_ind($1);} DECLARATION_STATEMENTS BODY2 | INDENTATION {printf("Level %d\n", $1);check_ind($1);} PROGRAM_STATEMENTS BODY2
 
 DECLARATION_STATEMENTS: AT VAR_LIST COLON COLON DATA_TYPE{
 						
@@ -498,7 +520,7 @@ void push_table(){
 }
 
 void pop_table(){
-	//display_symbol_table();
+	display_symbol_table();
 	printf("}\n");
     if(pointer != NULL){
         if(pointer->prev == NULL){

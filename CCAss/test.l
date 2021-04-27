@@ -24,6 +24,7 @@
 "char" {yylval.data_type=1; return CHAR;}
 "float" {yylval.data_type=2; return FLOAT;}
 "double" {yylval.data_type=3; return DOUBLE;}
+"return" {return RETURN;}
 "printf" {return PRINTF;}
 "scanf" {return SCANF;}
 "main" {return MAIN;}
