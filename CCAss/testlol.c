@@ -1,4 +1,9 @@
 #include<stdio.h>
+int@funcname1():
+    @kya::int
+    printf("Hi")
+    @lol::int
+
 void @ main():
     @a,lmmao,Iwannadie=1::int
     @b::int
@@ -8,4 +13,6 @@ void @ main():
     for(@hmm=1::int,hmm<2,hmm++):
         @d::int
         @**k::char
+        if(d<k):
+        if(b>=1):
     printf("Hello %s", array2[a][a])
