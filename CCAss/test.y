@@ -78,14 +78,16 @@
 %start prm
 
 %%
-prm	: HEADERS MAIN_TYPE AT MAIN LB RB COLON {push_table();} BODY{
-							pop_table();
-							success=1;
-						   }
+prm	: HEADERS FUNCTIONS MAIN_FUNC_BODY{success=1;}
 HEADERS : HEADER HEADERS | HEADER
 HEADER	: HASH INCLUDE LT HEADER_FILE GT | HASH INCLUDE Q_STRING {format_string($3);}
-BODY	: INDENTATION {printf("Level %d\n", $1);check_ind($1);} DECLARATION_STATEMENTS BODY2
-BODY2	: /*Epsilon*/ | INDENTATION {printf("Level %d\n", $1);check_ind($1);} DECLARATION_STATEMENTS BODY2 | INDENTATION {printf("Level %d\n", $1);check_ind($1);} PROGRAM_STATEMENTS BODY2
+
+FUNCTIONS : FUNCTION_BODY | FUNCTION_BODY FUNCTIONS | {/*Epsilon*/}
+FUNCTION_BODY : DATA_TYPE AT VAR LB RB COLON {push_table();} BODY {pop_table();}
+MAIN_FUNC_BODY : MAIN_TYPE AT MAIN LB RB COLON {push_table();} BODY {pop_table();}
+
+BODY	: INDENTATION {/*printf("Level %d\n", $1);*/check_ind($1);} DECLARATION_STATEMENTS BODY2
+BODY2	: /*Epsilon*/ | INDENTATION {/*printf("Level %d\n", $1);*/check_ind($1);} DECLARATION_STATEMENTS BODY2 | INDENTATION {/*printf("Level %d\n", $1);*/check_ind($1);} PROGRAM_STATEMENTS BODY2
 
 DECLARATION_STATEMENTS: AT VAR_LIST COLON COLON DATA_TYPE{
 						
@@ -204,6 +206,7 @@ PROGRAM_STATEMENTS :	ASSIGNMENT_STATEMENT
 				| DO COLON {push_table();} BODY2 WHILE LB LOGICAL_EXPN RB
 				| FOR LB ASSIGNMENT_STATEMENT COMA LOGICAL_EXPN COMA INCR_DCR_EXPN RB COLON {push_table();} BODY2 //RCB {pop_table();}
 				| FOR LB DECLARATION_STATEMENTS COMA LOGICAL_EXPN COMA INCR_DCR_EXPN RB COLON {push_table();} BODY2
+				| {/*Epsilon*/}
 
 WRITE_STATEMENT : PRINTF LB Q_STRING {RWmode = 2; format_string($3);} RB{
 					RWmode = 0;
@@ -275,9 +278,9 @@ ASSIGNMENT_STATEMENT : A_EXPN EQ A_EXPN
 						exit(0);
 					}else if($1.data_depth!=$3.data_depth)
 					{
-						//yyerror("Incompatible pointer type in assignment");
-						//exit(0);
-						printf("\n Line number: %d Warning : Incompatible pointer type in assignment",yylineno);
+						yyerror("Incompatible pointer type in assignment");
+						exit(0);
+						//printf("\n Line number: %d Warning : Incompatible pointer type in assignment",yylineno);
 					}
 					else if($1.isValue==1)
 					{
@@ -473,11 +476,12 @@ OPR_PREC2: DIV {current_operator='/';}
 		| EXP {current_operator='^';} 
 		| MOD {current_operator='%'; is_modulus = 1;}
 
-INDENTATION : TAB {printf("<TAB>");$$ = 1;} | INDENTATION TAB {printf("<INDENTATION TAB>");;$$++;}
+INDENTATION : TAB {/*printf("<TAB>");*/$$ = 1;} | INDENTATION TAB {/*printf("<INDENTATION TAB>");*/$$++;}
 
 %%
 
 void push_table(){
+	printf("{\n");
     struct symbol_table_stack * node = (struct symbol_table_stack *)malloc(sizeof(struct symbol_table_stack));
     node->var_count = -1;
     
@@ -494,7 +498,8 @@ void push_table(){
 }
 
 void pop_table(){
-	display_symbol_table();
+	//display_symbol_table();
+	printf("}\n");
     if(pointer != NULL){
         if(pointer->prev == NULL){
             pointer = NULL;
@@ -647,8 +652,12 @@ void format_string(char str[200]){
 	}
 }
 void check_ind(int current_ind){
-	if(current_ind == pointer->ind_level - 1){
-		pop_table();
+	if(current_ind < pointer->ind_level){
+		int indd = pointer->ind_level - current_ind;
+		while(indd!=0){
+			pop_table();
+			indd--;
+		}
 	}
 	if(current_ind != pointer->ind_level){
 		yyerror("Indentation Error");exit(0);
