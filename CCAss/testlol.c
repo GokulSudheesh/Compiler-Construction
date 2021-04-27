@@ -9,14 +9,12 @@ int@funcname1():
         @loop1::int 
     return lol
 
-int@funcname2():
+void@funcname2():
     @kya2::int
     printf("Hi %d", kya2)
     @loll2::int
     @loll3::float
-    return loll2
-
-void @ main():
+int @ main():
     @a,lmmao,Iwannadie=1::int
     @b::int
     @array1[20][30][40],a2,**p::int

@@ -27,7 +27,6 @@
 "return" {return RETURN;}
 "printf" {return PRINTF;}
 "scanf" {return SCANF;}
-"main" {return MAIN;}
 "#" {return HASH;}
 "("	{return LB;}
 ")"	{return RB;}

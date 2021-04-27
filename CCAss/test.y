@@ -55,7 +55,7 @@
 			int isValue;
 		}EXPN_type;
 }
-%token HASH INCLUDE HEADER_FILE AT MAIN VOID RETURN TAB LB RB LCB RCB LSQRB RSQRB SC COLON QMARK COMA IF ELSE_IF ELSE FOR DO 
+%token HASH INCLUDE HEADER_FILE AT VOID RETURN TAB LB RB LCB RCB LSQRB RSQRB SC COLON QMARK COMA IF ELSE_IF ELSE FOR DO 
 %token WHILE PRINTF SCANF ET EQ GT LT GTE LTE NE AMPER OR NOT DQUOTE PLUS MINUS MUL DIV MOD EXP UPLUS UMINUS
 
 %left PLUS MINUS
@@ -77,26 +77,38 @@
 %type<EXPN_type>A_EXPN
 %type<EXPN_type>ARRAY_ACCESS
 %type<EXPN_type>INCR_DCR_EXPN
+%type<data_type>FUNC_BODY
 
 %start prm
 
 %%
-prm	: HEADERS FUNCTIONS MAIN_FUNC_BODY{success=1;}
+prm	: HEADERS FUNCTIONS {
+		if(strcmp(func_list[func_count].func_name, "main")!=0){
+			yyerror("Main function must be declared at the end.");exit(0);
+		}
+		success=1;
+	}
 HEADERS : HEADER HEADERS | HEADER
 HEADER	: HASH INCLUDE LT HEADER_FILE GT | HASH INCLUDE Q_STRING {format_string($3);}
 
 FUNCTIONS : FUNCTION_BODY | FUNCTION_BODY FUNCTIONS {/*Epsilon*/}
 FUNCTION_BODY : DATA_TYPE AT VAR {func_count++; strcpy(func_list[func_count].func_name, $3); func_list[func_count].type = current_data_type;}
-			FUNC_PARAM BODY RETURN A_EXPN {
-				if($8.type != func_list[func_count].type || $8.data_depth != 0){
-					yyerror("Return type does not match function type.");exit(0);
+			FUNC_PARAM FUNC_BODY {
+				if(func_list[func_count].type != $6 && strcmp(func_list[func_count].func_name, "main") != 0){
+					yyerror("Syntax Error: Function has no return statement.");exit(0);
 				}
 				pop_table();
 				pointer = NULL;
 			}
 
 FUNC_PARAM : LB FUNC_PARAS RB COLON {push_table();}
-
+FUNC_BODY : BODY RETURN A_EXPN {
+				if($3.type != func_list[func_count].type || $3.data_depth != 0){
+					yyerror("Return type does not match function type.");exit(0);
+				}
+				$$ = $3.type;
+			} 
+			| BODY {$$ = -1;}
 FUNC_PARAS : DATA_TYPE VAR COMA FUNC_PARAS {
 				func_list[func_count].para_types[func_list[func_count].paras] = current_data_type;
 				func_list[func_count].paras++;
@@ -106,7 +118,7 @@ FUNC_PARAS : DATA_TYPE VAR COMA FUNC_PARAS {
 				func_list[func_count].paras++;
 			}
 			| {/*Epsilon*/}
-MAIN_FUNC_BODY : MAIN_TYPE AT MAIN LB RB COLON {push_table();} BODY {pop_table();}
+//MAIN_FUNC_BODY : DATA_TYPE AT MAIN LB RB COLON {push_table();} BODY {pop_table();}
 
 BODY	: INDENTATION {printf("Level %d\n", $1);check_ind($1);} DECLARATION_STATEMENTS BODY2
 BODY2	: /*Epsilon*/ | INDENTATION {printf("Level %d\n", $1);check_ind($1);} DECLARATION_STATEMENTS BODY2 | INDENTATION {printf("Level %d\n", $1);check_ind($1);} PROGRAM_STATEMENTS BODY2
@@ -201,7 +213,7 @@ ARRAY_SIZE : ARRAY_SIZE LSQRB INT_NUMBER RSQRB {
 				var_list[var_list_ind].array_dim[var_list[var_list_ind].dims] = $2;
 				//printf("<LSQRB %d RSQRB>", $2);
 			}
-MAIN_TYPE : INT | VOID
+
 DATA_TYPE : INT {
 			$$=$1;
 			current_data_type=$1;
@@ -218,6 +230,9 @@ DATA_TYPE : INT {
 			$$=$1;
 			current_data_type=$1;
 		}
+	| VOID {
+		current_data_type=-1;
+	}
  
 PROGRAM_STATEMENTS :	ASSIGNMENT_STATEMENT
 				| READ_STATEMENT
