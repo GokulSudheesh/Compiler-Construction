@@ -16,9 +16,6 @@
 	int RWmode; // 1 -> read mode, 2 -> write mode
 	int dims;
 
-	struct functions{char func_name[30]; int type; int paras; int para_types[10];}func_list[100];
-	int func_count = -1; 
-	
 	struct symbol_table{char var_name[30]; int type; int dim; int pointerDepth; int dim_bounds[5];};
 	struct symbol_table_stack{
     	struct symbol_table var_list[100];
@@ -29,6 +26,11 @@
 	};
 	struct symbol_table_stack * pointer = NULL;
 
+	struct functions{char func_name[30]; struct fun_type{int type;int data_depth;int isValue;}func_type; int paras; struct paras_table{int type; int data_depth;} para_sym[10];}func_list[100];
+	int func_count = -1; 
+	struct functions func_column;
+	int args;
+
 	extern void push_table();
 	extern void pop_table();
 	struct symbol_table get_column(char var[30]);
@@ -36,8 +38,10 @@
 	extern void insert_to_table(char var[30], int type, int is_Array, int dims, int ptr_depth, int array_dim[5]);
 	extern int get_array_dimensions(char var[30]);
 	extern void display_symbol_table();
+	extern void display_function_table();
 	extern void format_string(char str[200]);
 	extern void check_ind(int current_ind);
+	struct functions func_lookup(char var[30]);
 %}
 
 %union{
@@ -77,6 +81,8 @@
 %type<EXPN_type>A_EXPN
 %type<EXPN_type>ARRAY_ACCESS
 %type<EXPN_type>INCR_DCR_EXPN
+%type<EXPN_type>FUNC_DEC
+%type<EXPN_type>FUNC_DEPTH
 %type<data_type>FUNC_BODY
 
 %start prm
@@ -92,36 +98,59 @@ HEADERS : HEADER HEADERS | HEADER
 HEADER	: HASH INCLUDE LT HEADER_FILE GT | HASH INCLUDE Q_STRING {format_string($3);}
 
 FUNCTIONS : FUNCTION_BODY | FUNCTION_BODY FUNCTIONS {/*Epsilon*/}
-FUNCTION_BODY : DATA_TYPE AT VAR {func_count++; strcpy(func_list[func_count].func_name, $3); func_list[func_count].type = current_data_type;}
+FUNCTION_BODY : DATA_TYPE AT FUNC_DEPTH VAR {func_count++; strcpy(func_list[func_count].func_name, $4); func_list[func_count].func_type.type = $1; func_list[func_count].func_type.data_depth = $3.data_depth;}
 			FUNC_PARAM FUNC_BODY {
-				if(func_list[func_count].type != $6 && strcmp(func_list[func_count].func_name, "main") != 0){
+				if(func_list[func_count].func_type.type != $7 && strcmp(func_list[func_count].func_name, "main") != 0){
 					yyerror("Syntax Error: Function has no return statement.");exit(0);
 				}
 				pop_table();
 				pointer = NULL;
 			}
+FUNC_DEPTH : MUL FUNC_DEPTH {$$.data_depth++;} | MUL {$$.data_depth++;} | /*Epsilon*/ {$$.data_depth=0;}
 
-FUNC_PARAM : LB FUNC_PARAS RB COLON {push_table();}
+FUNC_PARAM : LB {push_table();} FUNC_PARAS {display_function_table();} RB COLON
 FUNC_BODY : BODY RETURN A_EXPN {
-				if($3.type != func_list[func_count].type || $3.data_depth != 0){
+				if($3.type != func_list[func_count].func_type.type || $3.data_depth != func_list[func_count].func_type.data_depth){
 					yyerror("Return type does not match function type.");exit(0);
 				}
 				$$ = $3.type;
+				func_list[func_count].func_type.isValue = $3.isValue;
 			} 
 			| BODY {$$ = -1;}
-FUNC_PARAS : DATA_TYPE VAR COMA FUNC_PARAS {
-				func_list[func_count].para_types[func_list[func_count].paras] = current_data_type;
+FUNC_PARAS : FUNC_PARAS2 COMA FUNC_PARAS | FUNC_PARAS2 
+FUNC_PARAS2 : FUNC_DEC COLON COLON DATA_TYPE {
+				func_list[func_count].para_sym[func_list[func_count].paras].type = $4;
+				func_list[func_count].para_sym[func_list[func_count].paras].data_depth = $1.data_depth;
 				func_list[func_count].paras++;
-			} 
-			| DATA_TYPE VAR {
-				func_list[func_count].para_types[func_list[func_count].paras] = current_data_type;
-				func_list[func_count].paras++;
+				insert_to_table(var_list[var_list_ind-1].var_name, current_data_type, var_list[var_list_ind-1].is_Array, var_list[var_list_ind-1].dims, var_list[var_list_ind-1].ptr_depth, var_list[var_list_ind-1].array_dim);
+				var_list_ind = 0;
+				for(int i = 0; i< 20; i++){
+					var_list[i].LHS_type = 0;
+					if (var_list[i].is_Array){
+						var_list[i].is_Array = 0;
+						var_list[i].dims = 0;
+					}
+					if (var_list[i].ptr_depth > 0){
+						var_list[i].ptr_depth = 0;
+					}
+				}
 			}
 			| {/*Epsilon*/}
+FUNC_DEC : VAR {
+			$$.data_depth = 0;
+			strcpy(var_list[var_list_ind].var_name,$1);
+			var_list_ind++;
+		}
+		| ARRAY_DECLARATION {
+			$$.data_depth = var_list[var_list_ind-1].dims+1; 
+		}
+		| PTR_VAR {
+			$$.data_depth = var_list[var_list_ind-1].ptr_depth;
+		}
 //MAIN_FUNC_BODY : DATA_TYPE AT MAIN LB RB COLON {push_table();} BODY {pop_table();}
 
-BODY	: INDENTATION {printf("Level %d\n", $1);check_ind($1);} DECLARATION_STATEMENTS BODY2
-BODY2	: /*Epsilon*/ | INDENTATION {printf("Level %d\n", $1);check_ind($1);} DECLARATION_STATEMENTS BODY2 | INDENTATION {printf("Level %d\n", $1);check_ind($1);} PROGRAM_STATEMENTS BODY2
+BODY	: INDENTATION {/*printf("Level %d\n", $1);*/check_ind($1);} DECLARATION_STATEMENTS BODY2
+BODY2	: /*Epsilon*/ | INDENTATION {/*printf("Level %d\n", $1);*/check_ind($1);} DECLARATION_STATEMENTS BODY2 | INDENTATION {/*printf("Level %d\n", $1);*/check_ind($1);} PROGRAM_STATEMENTS BODY2
 
 DECLARATION_STATEMENTS: AT VAR_LIST COLON COLON DATA_TYPE{
 						
@@ -231,12 +260,14 @@ DATA_TYPE : INT {
 			current_data_type=$1;
 		}
 	| VOID {
+		$$=-1;
 		current_data_type=-1;
 	}
  
 PROGRAM_STATEMENTS :	ASSIGNMENT_STATEMENT
 				| READ_STATEMENT
 				| INCR_DCR_EXPN
+				| FUNC_CALL
 				| LB LOGICAL_EXPN RB QMARK LCB {push_table();} BODY2 RCB {pop_table();} COLON LCB {push_table();} BODY2 RCB {pop_table();}
 				| CONDITIONAL_STATEMENTS
 				| WHILE LB LOGICAL_EXPN RB COLON {push_table();} BODY2 //RCB {pop_table();}
@@ -244,6 +275,22 @@ PROGRAM_STATEMENTS :	ASSIGNMENT_STATEMENT
 				| FOR LB ASSIGNMENT_STATEMENT COMA LOGICAL_EXPN COMA INCR_DCR_EXPN RB COLON {push_table();} BODY2 //RCB {pop_table();}
 				| FOR LB DECLARATION_STATEMENTS COMA LOGICAL_EXPN COMA INCR_DCR_EXPN RB COLON {push_table();} BODY2
 				| {/*Epsilon*/}
+
+FUNC_CALL : VAR LB {func_column = func_lookup($1);} FUNC_ARG RB
+FUNC_ARG : A_EXPN COMA FUNC_ARG {
+			if($1.type != func_column.para_sym[args].type || func_column.para_sym[args].data_depth != $1.data_depth){
+				yyerror("Type mismatch in function arguments.");exit(0);
+			}
+			args--;		
+		}
+		| A_EXPN {
+			args = func_column.paras-1;
+			if($1.type != func_column.para_sym[args].type || func_column.para_sym[args].data_depth != $1.data_depth){
+				yyerror("Type mismatch in function arguments.");exit(0);
+			}
+			args--;
+		}
+		| {/*Epsilon*/}
 
 WRITE_STATEMENT : PRINTF LB Q_STRING {RWmode = 2; format_string($3);} RB{
 					RWmode = 0;
@@ -405,6 +452,12 @@ A_EXPN	: A_EXPN OPR_PREC1 A_EXPN
 			$$.data_depth = column.pointerDepth;
 			$$.isValue = 0;
 			strcpy($$.var_name, $1);
+		}
+		| FUNC_CALL {
+			$$.type = func_column.func_type.type;//Return types
+			$$.data_depth = func_column.func_type.data_depth;
+			$$.isValue = func_column.func_type.isValue;
+
 		}
 		| INT_NUMBER {
 			$$.type = 0;
@@ -653,6 +706,19 @@ void display_symbol_table(){
         current = current->prev;
     }
 }
+void display_function_table(){
+    printf("\n+------------------------------FUNCTION TABLE------------------------------+\n");
+    printf("|Func name\t\tType\tData Depth\tParas\tParameter Types\t |\n");
+    for(int i=0; i<=func_count; i++)
+    {
+        printf("|%s\t\t%d\t%d\t%d\t", func_list[i].func_name, func_list[i].func_type.type,func_list[i].func_type.data_depth, func_list[i].paras);
+        for(int j=0; j<func_list[i].paras; j++){
+            printf("{%d, %d}",func_list[i].para_sym[j].type, func_list[i].para_sym[j].data_depth);
+        }
+		printf("\n");
+    }
+    printf("+--------------------------------------------------------------------------+\n");
+}
 void format_string(char str[200]){
 	if (RWmode == 0){ //for Header Files
 		int i = 0;
@@ -699,6 +765,16 @@ void check_ind(int current_ind){
 	if(current_ind != pointer->ind_level){
 		yyerror("Indentation Error");exit(0);
 	}
+}
+struct functions func_lookup(char str[30]){
+	for (int i = 0; i <= func_count; i++){
+		if(strcmp(str, func_list[i].func_name)==0){
+			return func_list[i];
+		}
+	}
+	printf("Parsing Failed\nLine Number: %d Function: %s is not defined.",yylineno, str);
+	exit(0);
+	return func_list[0];
 }
 int main()
 {

@@ -57,7 +57,8 @@
 "||" {return OR;}
 "!" {return NOT;}
 [\"] {return DQUOTE;}
-\/\/(.*) {/*Single line comment*/};	
+([" "]{4})*\/\/(.*) {/*Single line comment*/};
+([" "]{4})*\/\*(.*\n)*.*\*\/  {/*Regular expression for multi line comment*/};	
 \"([^\\\"]|\\.)*\" {strcpy(yylval.q_string,yytext); return Q_STRING;}
 ([A-Z]+|[a-z]+)([A-Z]+|[a-z]+|[0-9]+)* {strcpy(yylval.var_name,yytext);return VAR;}
 [0-9]+ {yylval.integer_val = atoi(yytext); return INT_NUMBER;}
