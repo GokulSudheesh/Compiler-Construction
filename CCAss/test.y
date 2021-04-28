@@ -15,6 +15,7 @@
 	int format_spec_counter=0;
 	int RWmode; // 1 -> read mode, 2 -> write mode
 	int dims;
+	char temp_string[100];
 
 	struct symbol_table{char var_name[30]; int type; int dim; int pointerDepth; int dim_bounds[5];};
 	struct symbol_table_stack{
@@ -31,7 +32,7 @@
 	struct functions func_column;
 	int args;
 
-	extern void push_table();
+	extern void push_table(int mode);//mode==1 -> prints "{\n" else nope
 	extern void pop_table();
 	struct symbol_table get_column(char var[30]);
 	extern int lookup_in_table(char var[30], int mode);
@@ -47,7 +48,12 @@
 %union{
 	int line_ind;	
 	int data_type;
+	struct 
+		{
+			int type;char code[100];
+		}DATA_type;
 	char var_name[30];
+	char code[100];
 	int integer_val;
 	float float_val;
 	char q_string[200];
@@ -57,9 +63,10 @@
 			int type;
 			int  data_depth;
 			int isValue;
+			char code[100];
 		}EXPN_type;
 }
-%token HASH INCLUDE HEADER_FILE AT VOID RETURN TAB LB RB LCB RCB LSQRB RSQRB SC COLON QMARK COMA IF ELSE_IF ELSE FOR DO 
+%token HASH IMPORT AT VOID RETURN TAB LB RB LCB RCB LSQRB RSQRB SC COLON QMARK COMA IF ELSE_IF ELSE FOR DO 
 %token WHILE PRINTF SCANF ET EQ GT LT GTE LTE NE AMPER OR NOT DQUOTE PLUS MINUS MUL DIV MOD EXP UPLUS UMINUS
 
 %left PLUS MINUS
@@ -76,14 +83,16 @@
 %token<integer_val>INT_NUMBER
 %token<float_val>FLOAT_NUMBER
 %token<q_string>Q_STRING
+%token<var_name>HEADER_FILE
 %type<line_ind>INDENTATION
-%type<data_type>DATA_TYPE
+%type<DATA_type>DATA_TYPE
 %type<EXPN_type>A_EXPN
 %type<EXPN_type>ARRAY_ACCESS
 %type<EXPN_type>INCR_DCR_EXPN
 %type<EXPN_type>FUNC_DEC
 %type<EXPN_type>FUNC_DEPTH
 %type<data_type>FUNC_BODY
+%type<code>VAR_LIST
 
 %start prm
 
@@ -95,20 +104,20 @@ prm	: HEADERS FUNCTIONS {
 		success=1;
 	}
 HEADERS : HEADER HEADERS | HEADER
-HEADER	: HASH INCLUDE LT HEADER_FILE GT | HASH INCLUDE Q_STRING {format_string($3);}
+HEADER	: IMPORT LT HEADER_FILE GT {printf("#include <%s>\n",$3);}| IMPORT Q_STRING {format_string($2);printf("#include %s\n",$2);}
 
 FUNCTIONS : FUNCTION_BODY | FUNCTION_BODY FUNCTIONS {/*Epsilon*/}
-FUNCTION_BODY : DATA_TYPE AT FUNC_DEPTH VAR {func_count++; strcpy(func_list[func_count].func_name, $4); func_list[func_count].func_type.type = $1; func_list[func_count].func_type.data_depth = $3.data_depth;}
+FUNCTION_BODY : DATA_TYPE AT {printf("%s ",$1.code);} FUNC_DEPTH VAR {func_count++; strcpy(func_list[func_count].func_name, $5); func_list[func_count].func_type.type = $1.type; func_list[func_count].func_type.data_depth = $4.data_depth;printf("%s",$5);}
 			FUNC_PARAM FUNC_BODY {
-				if(func_list[func_count].func_type.type != $7 && strcmp(func_list[func_count].func_name, "main") != 0){
+				if(func_list[func_count].func_type.type != $8 && strcmp(func_list[func_count].func_name, "main") != 0){
 					yyerror("Syntax Error: Function has no return statement.");exit(0);
 				}
 				pop_table();
 				pointer = NULL;
 			}
-FUNC_DEPTH : MUL FUNC_DEPTH {$$.data_depth++;} | MUL {$$.data_depth++;} | /*Epsilon*/ {$$.data_depth=0;}
+FUNC_DEPTH : MUL FUNC_DEPTH {$$.data_depth++;printf("*");} | MUL {$$.data_depth++;printf("*");} | /*Epsilon*/ {$$.data_depth=0;}
 
-FUNC_PARAM : LB {push_table();} FUNC_PARAS {display_function_table();} RB COLON
+FUNC_PARAM : LB {push_table(0);printf("(");} FUNC_PARAS {/*display_function_table();*/} RB COLON {printf("){\n");}
 FUNC_BODY : BODY RETURN A_EXPN {
 				if($3.type != func_list[func_count].func_type.type || $3.data_depth != func_list[func_count].func_type.data_depth){
 					yyerror("Return type does not match function type.");exit(0);
@@ -117,9 +126,9 @@ FUNC_BODY : BODY RETURN A_EXPN {
 				func_list[func_count].func_type.isValue = $3.isValue;
 			} 
 			| BODY {$$ = -1;}
-FUNC_PARAS : FUNC_PARAS2 COMA FUNC_PARAS | FUNC_PARAS2 
+FUNC_PARAS : FUNC_PARAS2 COMA {printf(",");} FUNC_PARAS | FUNC_PARAS2 
 FUNC_PARAS2 : FUNC_DEC COLON COLON DATA_TYPE {
-				func_list[func_count].para_sym[func_list[func_count].paras].type = $4;
+				func_list[func_count].para_sym[func_list[func_count].paras].type = $4.type;
 				func_list[func_count].para_sym[func_list[func_count].paras].data_depth = $1.data_depth;
 				func_list[func_count].paras++;
 				insert_to_table(var_list[var_list_ind-1].var_name, current_data_type, var_list[var_list_ind-1].is_Array, var_list[var_list_ind-1].dims, var_list[var_list_ind-1].ptr_depth, var_list[var_list_ind-1].array_dim);
@@ -134,20 +143,24 @@ FUNC_PARAS2 : FUNC_DEC COLON COLON DATA_TYPE {
 						var_list[i].ptr_depth = 0;
 					}
 				}
+				printf("%s %s",$4.code, $1.code);
 			}
 			| {/*Epsilon*/}
 FUNC_DEC : VAR {
 			$$.data_depth = 0;
 			strcpy(var_list[var_list_ind].var_name,$1);
 			var_list_ind++;
+			strcpy($$.code,$1);
 		}
 		| ARRAY_DECLARATION {
-			$$.data_depth = var_list[var_list_ind-1].dims+1; 
+			$$.data_depth = var_list[var_list_ind-1].dims+1;
+			strcpy($$.code,"");
 		}
 		| PTR_VAR {
 			$$.data_depth = var_list[var_list_ind-1].ptr_depth;
+			strcpy($$.code,"");
 		}
-//MAIN_FUNC_BODY : DATA_TYPE AT MAIN LB RB COLON {push_table();} BODY {pop_table();}
+//MAIN_FUNC_BODY : DATA_TYPE AT MAIN LB RB COLON {push_table(1);} BODY {pop_table();}
 
 BODY	: INDENTATION {/*printf("Level %d\n", $1);*/check_ind($1);} DECLARATION_STATEMENTS BODY2
 BODY2	: /*Epsilon*/ | INDENTATION {/*printf("Level %d\n", $1);*/check_ind($1);} DECLARATION_STATEMENTS BODY2 | INDENTATION {/*printf("Level %d\n", $1);*/check_ind($1);} PROGRAM_STATEMENTS BODY2
@@ -177,28 +190,33 @@ DECLARATION_STATEMENTS: AT VAR_LIST COLON COLON DATA_TYPE{
 								var_list[i].ptr_depth = 0;
 							}
 						}
+						printf("%s %s;\n",$5.code,$2);
 					} 
 					| WRITE_STATEMENT
 VAR_LIST : VAR COMA VAR_LIST {
 				strcpy(var_list[var_list_ind].var_name,$1);
 				var_list_ind++;
+				strcpy(temp_string,$1);strcat(temp_string,",");
+				strcat(temp_string,$3);strcpy($$,temp_string);
 				//insert_to_table($1,current_data_type);
 			    }
 	| ARRAY_DECLARATION COMA VAR_LIST {
 		//printf("<ARRAY_DECLARATION COMA VAR_LIST>");
 	}
-	| PTR_VAR COMA VAR_LIST
-	| VAR_LIST2 COMA VAR_LIST
+	| PTR_VAR COMA VAR_LIST {strcat($$,"");}
+	| VAR_LIST2 COMA VAR_LIST {strcat($$,"");}
 	| VAR {
 			strcpy(var_list[var_list_ind].var_name,$1);
 			var_list_ind++;
+			strcpy($$, $1);
 			//insert_to_table($1,current_data_type);
 	      }
 	| ARRAY_DECLARATION {
 		//printf("<ARRAY_DECLARATION>");
+		{strcat($$,"");}
 	}
-	| PTR_VAR
-	| VAR_LIST2
+	| PTR_VAR {strcat($$,"");}
+	| VAR_LIST2 {strcat($$,"");}
 VAR_LIST2 : VAR EQ A_EXPN {
 				if ($3.data_depth!=0){
 					yyerror("Incompatible pointer type in assignment");
@@ -244,23 +262,28 @@ ARRAY_SIZE : ARRAY_SIZE LSQRB INT_NUMBER RSQRB {
 			}
 
 DATA_TYPE : INT {
-			$$=$1;
+			$$.type=$1;
+			strcpy($$.code,"int");
 			current_data_type=$1;
 		} 
 	| CHAR  {
-			$$=$1;
+			$$.type=$1;
+			strcpy($$.code,"char");
 			current_data_type=$1;
 		}
 	| FLOAT {
-			$$=$1;
+			$$.type=$1;
+			strcpy($$.code,"float");
 			current_data_type=$1;
 		}
 	| DOUBLE {
-			$$=$1;
+			$$.type=$1;
+			strcpy($$.code,"double");
 			current_data_type=$1;
 		}
 	| VOID {
-		$$=-1;
+		$$.type=-1;
+		strcpy($$.code,"void");
 		current_data_type=-1;
 	}
  
@@ -268,12 +291,12 @@ PROGRAM_STATEMENTS :	ASSIGNMENT_STATEMENT
 				| READ_STATEMENT
 				| INCR_DCR_EXPN
 				| FUNC_CALL
-				| LB LOGICAL_EXPN RB QMARK LCB {push_table();} BODY2 RCB {pop_table();} COLON LCB {push_table();} BODY2 RCB {pop_table();}
+				| LB LOGICAL_EXPN RB QMARK LCB {push_table(1);} BODY2 RCB {pop_table();} COLON LCB {push_table(1);} BODY2 RCB {pop_table();}
 				| CONDITIONAL_STATEMENTS
-				| WHILE LB LOGICAL_EXPN RB COLON {push_table();} BODY2 //RCB {pop_table();}
-				| DO COLON {push_table();} BODY2 WHILE LB LOGICAL_EXPN RB
-				| FOR LB ASSIGNMENT_STATEMENT COMA LOGICAL_EXPN COMA INCR_DCR_EXPN RB COLON {push_table();} BODY2 //RCB {pop_table();}
-				| FOR LB DECLARATION_STATEMENTS COMA LOGICAL_EXPN COMA INCR_DCR_EXPN RB COLON {push_table();} BODY2
+				| WHILE LB LOGICAL_EXPN RB COLON {push_table(1);} BODY2 //RCB {pop_table();}
+				| DO COLON {push_table(1);} BODY2 WHILE LB LOGICAL_EXPN RB
+				| FOR LB ASSIGNMENT_STATEMENT SC LOGICAL_EXPN SC INCR_DCR_EXPN RB COLON {push_table(1);} BODY2 //RCB {pop_table();}
+				| FOR LB DECLARATION_STATEMENTS SC LOGICAL_EXPN SC INCR_DCR_EXPN RB COLON {push_table(1);} BODY2
 				| {/*Epsilon*/}
 
 FUNC_CALL : VAR LB {func_column = func_lookup($1);} FUNC_ARG RB
@@ -350,9 +373,9 @@ VAR_LIST_IP : A_EXPN COMA VAR_LIST_IP {
 			}
 
 CONDITIONAL_STATEMENTS : IF_STATEMENT | IF_STATEMENT ELSE_STATEMENT | IF_STATEMENT ELSE_IF_STATEMENT | IF_STATEMENT ELSE_IF_STATEMENT ELSE_STATEMENT
-IF_STATEMENT : IF LB LOGICAL_EXPN RB COLON {push_table();} BODY2 //RCB {pop_table();}
-ELSE_IF_STATEMENT : ELSE_IF LB LOGICAL_EXPN RB COLON {push_table();} BODY2 /*RCB {pop_table();}*/ | ELSE_IF_STATEMENT ELSE_IF LB LOGICAL_EXPN RB COLON {push_table();} BODY2 //RCB {pop_table();}
-ELSE_STATEMENT : ELSE COLON {push_table();} BODY2 //RCB {pop_table();}
+IF_STATEMENT : IF LB LOGICAL_EXPN RB COLON {push_table(1);} BODY2 //RCB {pop_table();}
+ELSE_IF_STATEMENT : ELSE_IF LB LOGICAL_EXPN RB COLON {push_table(1);} BODY2 /*RCB {pop_table();}*/ | ELSE_IF_STATEMENT ELSE_IF LB LOGICAL_EXPN RB COLON {push_table(1);} BODY2 //RCB {pop_table();}
+ELSE_STATEMENT : ELSE COLON {push_table(1);} BODY2 //RCB {pop_table();}
 
 ASSIGNMENT_STATEMENT : A_EXPN EQ A_EXPN
 				{
@@ -570,8 +593,9 @@ INDENTATION : TAB {/*printf("<TAB>");*/$$ = 1;} | INDENTATION TAB {/*printf("<IN
 
 %%
 
-void push_table(){
-	printf("{\n");
+void push_table(int mode){
+	if(mode)
+		printf("{\n");
     struct symbol_table_stack * node = (struct symbol_table_stack *)malloc(sizeof(struct symbol_table_stack));
     node->var_count = -1;
     
@@ -588,7 +612,7 @@ void push_table(){
 }
 
 void pop_table(){
-	display_symbol_table();
+	//display_symbol_table();
 	printf("}\n");
     if(pointer != NULL){
         if(pointer->prev == NULL){

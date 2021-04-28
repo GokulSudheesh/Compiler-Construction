@@ -10,8 +10,8 @@
 %%
 [\n]+  {/*new line*/}
 [" "]{4} {return TAB;} 
-"include" {return INCLUDE;}
-([a-z]+|[A-Z]+)+["."][h] {return HEADER_FILE;}
+"import" {return IMPORT;}
+([a-z]+|[A-Z]+)+["."][h] {strcpy(yylval.var_name,yytext);return HEADER_FILE;}
 "if"	{return IF;}
 "else if" {return ELSE_IF;}
 "else"	{return ELSE;}
