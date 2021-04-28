@@ -10,7 +10,6 @@
 	int success = 0;
 	int current_data_type;
 	int is_modulus = 0;
-	char current_operator;
 	int array_format_spec[20];
 	int format_spec_counter=0;
 	int RWmode; // 1 -> read mode, 2 -> write mode
@@ -43,6 +42,7 @@
 	extern void format_string(char str[200]);
 	extern void check_ind(int current_ind);
 	struct functions func_lookup(char var[30]);
+	extern void print_tabs();
 %}
 
 %union{
@@ -54,8 +54,11 @@
 		}DATA_type;
 	char var_name[30];
 	char code[100];
-	int integer_val;
-	float float_val;
+	struct{
+		int integer_val;
+		float float_val;
+		char code[100];
+	}Number;
 	char q_string[200];
 	struct 
 		{
@@ -80,8 +83,8 @@
 %token<data_type>FLOAT
 %token<data_type>DOUBLE
 %token<var_name>VAR
-%token<integer_val>INT_NUMBER
-%token<float_val>FLOAT_NUMBER
+%token<Number>INT_NUMBER
+%token<Number>FLOAT_NUMBER
 %token<q_string>Q_STRING
 %token<var_name>HEADER_FILE
 %type<line_ind>INDENTATION
@@ -93,6 +96,9 @@
 %type<EXPN_type>FUNC_DEPTH
 %type<data_type>FUNC_BODY
 %type<code>VAR_LIST
+%type<code>UNARY_OPERATORS
+%type<code>OPR_PREC1
+%type<code>OPR_PREC2
 
 %start prm
 
@@ -124,6 +130,7 @@ FUNC_BODY : BODY RETURN A_EXPN {
 				}
 				$$ = $3.type;
 				func_list[func_count].func_type.isValue = $3.isValue;
+				printf("return %s;\n",$3.code);
 			} 
 			| BODY {$$ = -1;}
 FUNC_PARAS : FUNC_PARAS2 COMA {printf(",");} FUNC_PARAS | FUNC_PARAS2 
@@ -252,12 +259,12 @@ ARRAY_DECLARATION: VAR ARRAY_SIZE {
 	}
 ARRAY_SIZE : ARRAY_SIZE LSQRB INT_NUMBER RSQRB {
 				var_list[var_list_ind].dims++;
-				var_list[var_list_ind].array_dim[var_list[var_list_ind].dims] = $3;
+				var_list[var_list_ind].array_dim[var_list[var_list_ind].dims] = $3.integer_val;
 				//printf("<ARRAY_SIZE LSQRB %d RSQRB>", $3);
 			}
 			| LSQRB INT_NUMBER RSQRB {
 				var_list[var_list_ind].dims = 0;
-				var_list[var_list_ind].array_dim[var_list[var_list_ind].dims] = $2;
+				var_list[var_list_ind].array_dim[var_list[var_list_ind].dims] = $2.integer_val;
 				//printf("<LSQRB %d RSQRB>", $2);
 			}
 
@@ -393,7 +400,8 @@ ASSIGNMENT_STATEMENT : A_EXPN EQ A_EXPN
 					{
 						yyerror("lvalue required as left operand of the assignment operator");
 						exit(0);
-					}	
+					}
+					printf("%s = %s;\n", $1.code, $3.code);
 				}
 
 LOGICAL_EXPN	: NOT LB LOGICAL_EXPN1 RB | LOGICAL_EXPN1
@@ -437,6 +445,11 @@ A_EXPN	: A_EXPN OPR_PREC1 A_EXPN
 						yyerror("Type mismatch in dereferencing operands");
 						exit(0);						
 					}
+					strcpy(temp_string,$1.code);
+					strcat(temp_string,$2);
+					strcat(temp_string,$3.code);
+					strcpy($$.code,temp_string);
+					strcpy(temp_string,"");
 				}
 
 		|A_EXPN OPR_PREC2 A_EXPN
@@ -453,21 +466,32 @@ A_EXPN	: A_EXPN OPR_PREC1 A_EXPN
 					}
 					if($1.data_depth!=0 || $3.data_depth!=0)
 					{
-						printf("\nInvalid operands to binary %c", current_operator);exit(0);
+						printf("\nInvalid operands to binary %s", $2);exit(0);
 					}	
 					$$.isValue=1;
 					$$.data_depth=0;
-					$$.type=$1.type;	
+					$$.type=$1.type;
+					strcpy(temp_string,$1.code);
+					strcat(temp_string,$2);
+					strcat(temp_string,$3.code);
+					strcpy($$.code,temp_string);
+					strcpy(temp_string,"");
 				}
 		| LB A_EXPN RB {
 			$$.isValue = $2.isValue;
 			$$.data_depth = $2.data_depth;
 			$$.type = $2.type;
+			strcpy(temp_string,"(");
+			strcat(temp_string,$2.code);
+			strcat(temp_string,")");
+			strcpy($$.code,temp_string);
+			strcpy(temp_string,"");
 		}		
 		| INCR_DCR_EXPN {
 			$$.type=$1.type;
 			$$.data_depth=$1.data_depth;	
 			$$.isValue=1;
+			strcpy($$.code, $1.code);
 		}
 		| VAR {
 			struct symbol_table column = get_column($1);
@@ -475,6 +499,7 @@ A_EXPN	: A_EXPN OPR_PREC1 A_EXPN
 			$$.data_depth = column.pointerDepth;
 			$$.isValue = 0;
 			strcpy($$.var_name, $1);
+			strcpy($$.code, $1);
 		}
 		| FUNC_CALL {
 			$$.type = func_column.func_type.type;//Return types
@@ -486,11 +511,13 @@ A_EXPN	: A_EXPN OPR_PREC1 A_EXPN
 			$$.type = 0;
 			$$.data_depth = 0;	
 			$$.isValue = 1;
+			strcpy($$.code, $1.code);
 		}
 		| FLOAT_NUMBER {
 			$$.type = 2;
 			$$.data_depth = 0;	
 			$$.isValue = 1;
+			strcpy($$.code, $1.code);
 		}
 		| MUL A_EXPN
 			{
@@ -524,7 +551,11 @@ A_EXPN	: A_EXPN OPR_PREC1 A_EXPN
 				}
 				$$.type=$2.type;
 				$$.data_depth=$2.data_depth+1;
-				$$.isValue=1;						
+				$$.isValue=1;
+				strcpy(temp_string,"&");
+				strcat(temp_string,$2.code);
+				strcpy($$.code,temp_string);
+				strcpy(temp_string,"");			
 			}
 
 ARRAY_ACCESS : ARRAY_ACCESS LSQRB A_EXPN RSQRB
@@ -580,22 +611,28 @@ INCR_DCR_EXPN : A_EXPN UNARY_OPERATORS {
 					$$.data_depth=$1.data_depth;	
 					$$.isValue=1;
 				}
+				strcpy(temp_string, $1.code);
+				strcat(temp_string, $2);
+				strcpy($$.code, temp_string);
+				strcpy(temp_string,"");
 			}
 
-UNARY_OPERATORS: UPLUS | UMINUS
-OPR_PREC1: PLUS | MINUS
-OPR_PREC2: DIV {current_operator='/';} 
-		| MUL {current_operator='*';} 
-		| EXP {current_operator='^';} 
-		| MOD {current_operator='%'; is_modulus = 1;}
+UNARY_OPERATORS: UPLUS {strcpy($$, "++");}| UMINUS {strcpy($$, "--");}
+OPR_PREC1: PLUS {strcpy($$, "+");}| MINUS {strcpy($$, "-");}
+OPR_PREC2: DIV {strcpy($$, "/");} 
+		| MUL {strcpy($$, "*");} 
+		| EXP {strcpy($$, "^");} 
+		| MOD {strcpy($$, "%"); is_modulus = 1;}
 
 INDENTATION : TAB {/*printf("<TAB>");*/$$ = 1;} | INDENTATION TAB {/*printf("<INDENTATION TAB>");*/$$++;}
 
 %%
 
 void push_table(int mode){
-	if(mode)
+	if(mode){
+		//print_tabs();
 		printf("{\n");
+	}
     struct symbol_table_stack * node = (struct symbol_table_stack *)malloc(sizeof(struct symbol_table_stack));
     node->var_count = -1;
     
@@ -613,6 +650,7 @@ void push_table(int mode){
 
 void pop_table(){
 	//display_symbol_table();
+	//print_tabs();
 	printf("}\n");
     if(pointer != NULL){
         if(pointer->prev == NULL){
@@ -789,6 +827,7 @@ void check_ind(int current_ind){
 	if(current_ind != pointer->ind_level){
 		yyerror("Indentation Error");exit(0);
 	}
+	print_tabs();
 }
 struct functions func_lookup(char str[30]){
 	for (int i = 0; i <= func_count; i++){
@@ -799,6 +838,11 @@ struct functions func_lookup(char str[30]){
 	printf("Parsing Failed\nLine Number: %d Function: %s is not defined.",yylineno, str);
 	exit(0);
 	return func_list[0];
+}
+void print_tabs(){
+	for(int i = 0; i<pointer->ind_level;i++){
+		printf("  ");
+	}
 }
 int main()
 {

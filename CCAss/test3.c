@@ -1,11 +1,12 @@
 import<stdio.h>
-import"/home/progs/something.h"
-void @ func1():
+import"/home/user/something.h"
+int @ func1(p1::int,p2::char):
     @j,k,l::int
     @yoo::int
-void @ func2(p1::int,p2::char):
-    @m,n::char
-    @h::double
+    l=j+k
+    return l+j
 int @ main():
     @a,b,c::int
     @d::int
+    a=b+(c/d)
+    return 0
