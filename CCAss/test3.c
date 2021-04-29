@@ -1,4 +1,4 @@
-import<stdio.h>
+import stdio.h
 import"/home/user/something.h"
 int @ func1(str1[30]::char,p2::float,*p::int):
     @j,k1,l::int

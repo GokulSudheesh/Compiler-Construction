@@ -1,4 +1,4 @@
-import <stdio.h>  
+import stdio.h
 int @ *getarray(*a::int):
     printf("Enter the elements in an array : ") 
     for(@i=0::int;i<5;i++): 

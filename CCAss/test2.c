@@ -1,4 +1,4 @@
-import<stdio.h>
+import stdio.h
 int@main():
     @a,*n::int 
     printf("\nElements of array are :")

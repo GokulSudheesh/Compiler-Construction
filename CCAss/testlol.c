@@ -1,4 +1,4 @@
-import<stdio.h>
+import stdio.h
 int@funcname1(para1::int,para2::float,para3::char,para4[1][2][3]::int):
     @kya::int
     printf("Hi")
