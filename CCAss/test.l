@@ -13,11 +13,12 @@
 "import" {return IMPORT;}
 ([a-z]+|[A-Z]+)+["."][h] {strcpy(yylval.var_name,yytext);return HEADER_FILE;}
 "if"	{return IF;}
-"else if" {return ELSE_IF;}
+"elif" {return ELSE_IF;}
 "else"	{return ELSE;}
 "for"	{return FOR;}
 "do"	{return DO;}
 "while"	{return WHILE;}
+"in" {return IN;}
 "@" {return AT;}
 "void" {return VOID;}
 "int"	{yylval.data_type=0;return INT;}
@@ -47,14 +48,17 @@
 [/] {return DIV;}
 [%] {return MOD;}
 "==" {return ET;}
+"is" {return IS;}
 "="	{return EQ;}
 ">" {return GT;}
 "<" {return LT;}
 ">=" {return GTE;}
 "<=" {return LTE;}
 "!=" {return NE;}
+"is not" {return ISNOT;}
 "&" {return AMPER;}
-"||" {return OR;}
+"and" {return AND;}
+"or" {return OR;}
 "!" {return NOT;}
 [\"] {return DQUOTE;}
 ([" "]{4})*\/\/(.*) {/*Single line comment*/};

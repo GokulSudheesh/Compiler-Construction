@@ -42,7 +42,7 @@
 	extern void format_string(char str[200]);
 	extern void check_ind(int current_ind);
 	struct functions func_lookup(char var[30]);
-	extern void print_tabs();
+	extern void print_tabs(int mode);//0 -> prev ind level | 1 -> current ind level
 %}
 
 %union{
@@ -70,7 +70,8 @@
 		}EXPN_type;
 }
 %token HASH IMPORT AT VOID RETURN TAB LB RB LCB RCB LSQRB RSQRB SC COLON QMARK COMA IF ELSE_IF ELSE FOR DO 
-%token WHILE PRINTF SCANF ET EQ GT LT GTE LTE NE AMPER OR NOT DQUOTE PLUS MINUS MUL DIV MOD EXP UPLUS UMINUS
+%token WHILE IN PRINTF SCANF ET EQ IS GT LT GTE LTE NE ISNOT AMPER AND OR NOT DQUOTE PLUS MINUS MUL DIV 
+%token MOD EXP UPLUS UMINUS
 
 %left PLUS MINUS
 %left MUL DIV MOD
@@ -95,6 +96,7 @@
 %type<EXPN_type>FUNC_DEC
 %type<EXPN_type>FUNC_DEPTH
 %type<data_type>FUNC_BODY
+%type<code>DECLARATION_STATEMENTS
 %type<code>VAR_LIST
 %type<code>UNARY_OPERATORS
 %type<code>OPR_PREC1
@@ -106,6 +108,12 @@
 %type<code>PTR_VAR
 %type<code>PTR_DEPTH
 %type<code>VAR_LIST2
+%type<code>ASSIGNMENT_STATEMENT
+%type<code>LOGICAL_EXPN
+%type<code>LOGICAL_EXPN1
+%type<code>LOGICAL_EXPN2
+%type<code>COMP_OPERATOR
+%type<code>LOGICAL_OPERATOR
 
 %start prm
 
@@ -117,7 +125,7 @@ prm	: HEADERS FUNCTIONS {
 		success=1;
 	}
 HEADERS : HEADER HEADERS | HEADER
-HEADER	: IMPORT LT HEADER_FILE GT {printf("#include <%s>\n",$3);}| IMPORT Q_STRING {format_string($2);printf("#include %s\n",$2);}
+HEADER	: IMPORT HEADER_FILE {printf("#include <%s>\n",$2);}| IMPORT Q_STRING {format_string($2);printf("#include %s\n",$2);}
 
 FUNCTIONS : FUNCTION_BODY | FUNCTION_BODY FUNCTIONS {/*Epsilon*/}
 FUNCTION_BODY : DATA_TYPE AT {printf("%s ",$1.code);} FUNC_DEPTH VAR {func_count++; strcpy(func_list[func_count].func_name, $5); func_list[func_count].func_type.type = $1.type; func_list[func_count].func_type.data_depth = $4.data_depth;printf("%s",$5);}
@@ -176,8 +184,8 @@ FUNC_DEC : VAR {
 		}
 //MAIN_FUNC_BODY : DATA_TYPE AT MAIN LB RB COLON {push_table(1);} BODY {pop_table();}
 
-BODY	: INDENTATION {/*printf("Level %d\n", $1);*/check_ind($1);} DECLARATION_STATEMENTS BODY2
-BODY2	: /*Epsilon*/ | INDENTATION {/*printf("Level %d\n", $1);*/check_ind($1);} DECLARATION_STATEMENTS BODY2 | INDENTATION {/*printf("Level %d\n", $1);*/check_ind($1);} PROGRAM_STATEMENTS BODY2
+BODY	: INDENTATION {/*printf("Level %d\n", $1);*/check_ind($1);} DECLARATION_STATEMENTS {printf("%s;\n",$3);} BODY2
+BODY2	: /*Epsilon*/ | INDENTATION {/*printf("Level %d\n", $1);*/check_ind($1);} DECLARATION_STATEMENTS {printf("%s;\n",$3);} BODY2 | INDENTATION {/*printf("Level %d\n", $1);*/check_ind($1);} PROGRAM_STATEMENTS BODY2
 
 DECLARATION_STATEMENTS: AT VAR_LIST COLON COLON DATA_TYPE{
 						
@@ -204,9 +212,13 @@ DECLARATION_STATEMENTS: AT VAR_LIST COLON COLON DATA_TYPE{
 								var_list[i].ptr_depth = 0;
 							}
 						}
-						printf("%s %s;\n",$5.code,$2);
+						strcpy(temp_string,$5.code);
+						strcat(temp_string," ");
+						strcat(temp_string,$2);
+						strcpy($$, temp_string);
+						strcpy(temp_string, "");
 					} 
-					| WRITE_STATEMENT
+					| WRITE_STATEMENT {strcpy($$, "");}
 VAR_LIST : VAR COMA VAR_LIST {
 				strcpy(var_list[var_list_ind].var_name,$1);
 				var_list_ind++;
@@ -335,15 +347,24 @@ DATA_TYPE : INT {
 		current_data_type=-1;
 	}
  
-PROGRAM_STATEMENTS :	ASSIGNMENT_STATEMENT
+PROGRAM_STATEMENTS :	ASSIGNMENT_STATEMENT {printf("%s;\n",$1);}
 				| READ_STATEMENT
-				| INCR_DCR_EXPN
+				| INCR_DCR_EXPN {printf("%s;\n",$1.code);}
 				| FUNC_CALL {printf("%s;\n",$1);}
 				| CONDITIONAL_STATEMENTS
-				| WHILE LB LOGICAL_EXPN RB COLON {push_table(1);} BODY2 //RCB {pop_table();}
-				| DO COLON {push_table(1);} BODY2 WHILE LB LOGICAL_EXPN RB
-				| FOR LB ASSIGNMENT_STATEMENT SC LOGICAL_EXPN SC INCR_DCR_EXPN RB COLON {push_table(1);} BODY2 //RCB {pop_table();}
-				| FOR LB DECLARATION_STATEMENTS SC LOGICAL_EXPN SC INCR_DCR_EXPN RB COLON {push_table(1);} BODY2
+				| WHILE LB LOGICAL_EXPN RB COLON {printf("while(%s)",$3);push_table(1);} BODY2 //RCB {pop_table();}
+				| DO LB LOGICAL_EXPN RB COLON BODY2
+				| FOR VAR {push_table(0);insert_to_table($2, 0, var_list[0].is_Array, var_list[0].dims, var_list[0].ptr_depth, var_list[0].array_dim);} IN A_EXPN COLON {
+					if($5.type!=0 || $5.data_depth!=1){
+						yyerror("Integer array of 1 dimension required for the iterator.");exit(0);
+					}
+					print_tabs(0);
+					printf("for(int i = 0; i < sizeof(%s)/sizeof(%s[0]); i++){\n",$5.code,$5.code);
+					print_tabs(1);
+					printf("int %s = %s[i];\n",$2,$5.code);
+				} BODY2 
+				| FOR LB ASSIGNMENT_STATEMENT SC LOGICAL_EXPN SC INCR_DCR_EXPN RB COLON {printf("for(%s; %s; %s)",$3,$5,$7.code);push_table(1);} BODY2 //RCB {pop_table();}
+				| FOR LB DECLARATION_STATEMENTS SC LOGICAL_EXPN SC INCR_DCR_EXPN RB COLON {printf("for(%s; %s; %s)",$3,$5,$7.code);push_table(1);} BODY2
 				| {/*Epsilon*/}
 
 FUNC_CALL : VAR LB {func_column = func_lookup($1);} FUNC_ARG RB {
@@ -436,9 +457,9 @@ VAR_LIST_IP : A_EXPN COMA VAR_LIST_IP {
 			}
 
 CONDITIONAL_STATEMENTS : IF_STATEMENT | IF_STATEMENT ELSE_STATEMENT | IF_STATEMENT ELSE_IF_STATEMENT | IF_STATEMENT ELSE_IF_STATEMENT ELSE_STATEMENT
-IF_STATEMENT : IF LB LOGICAL_EXPN RB COLON {push_table(1);} BODY2 //RCB {pop_table();}
-ELSE_IF_STATEMENT : ELSE_IF LB LOGICAL_EXPN RB COLON {push_table(1);} BODY2 /*RCB {pop_table();}*/ | ELSE_IF_STATEMENT ELSE_IF LB LOGICAL_EXPN RB COLON {push_table(1);} BODY2 //RCB {pop_table();}
-ELSE_STATEMENT : ELSE COLON {push_table(1);} BODY2 //RCB {pop_table();}
+IF_STATEMENT : IF LB LOGICAL_EXPN RB COLON {printf("if(%s)",$3);push_table(1);} BODY2 //RCB {pop_table();}
+ELSE_IF_STATEMENT : ELSE_IF LB LOGICAL_EXPN RB COLON {printf("else if(%s)",$3);push_table(1);} BODY2 /*RCB {pop_table();}*/ | ELSE_IF_STATEMENT ELSE_IF LB LOGICAL_EXPN RB COLON {printf("else if(%s)",$4);push_table(1);} BODY2 //RCB {pop_table();}
+ELSE_STATEMENT : ELSE COLON {printf("else");push_table(1);} BODY2 //RCB {pop_table();}
 
 ASSIGNMENT_STATEMENT : A_EXPN EQ A_EXPN
 				{
@@ -457,15 +478,47 @@ ASSIGNMENT_STATEMENT : A_EXPN EQ A_EXPN
 						yyerror("lvalue required as left operand of the assignment operator");
 						exit(0);
 					}
-					printf("%s = %s;\n", $1.code, $3.code);
+					strcpy(temp_string,$1.code);
+					strcat(temp_string," = ");
+					strcat(temp_string,$3.code);
+					strcpy($$, temp_string);
+					strcpy(temp_string,"");
 				}
 
-LOGICAL_EXPN	: NOT LB LOGICAL_EXPN1 RB | LOGICAL_EXPN1
-LOGICAL_EXPN1	: LOGICAL_EXPN1 LOGICAL_OPERATOR LOGICAL_EXPN1 | LOGICAL_EXPN2 | NOT LB LOGICAL_EXPN1 RB 
-				| LB LOGICAL_EXPN1 RB
-LOGICAL_EXPN2	: A_EXPN COMP_OPERATOR A_EXPN
-COMP_OPERATOR	: ET | GT | LT | GTE | LTE | NE
-LOGICAL_OPERATOR	: AMPER AMPER | OR
+LOGICAL_EXPN	: NOT LB LOGICAL_EXPN1 RB {strcpy(temp_string,"!");strcat(temp_string,"(");strcat(temp_string,$3);strcat(temp_string,")");strcpy($$,temp_string);strcpy(temp_string,"");}
+				| LOGICAL_EXPN1 {strcpy($$,$1);}
+LOGICAL_EXPN1	: LOGICAL_EXPN1 LOGICAL_OPERATOR LOGICAL_EXPN1{
+					strcpy(temp_string,$1);
+					strcat(temp_string,$2);
+					strcat(temp_string,$3);
+					strcpy($$,temp_string);
+					strcpy(temp_string,"");
+				}
+				| LB LOGICAL_EXPN1 RB {
+					strcpy(temp_string,"(");
+					strcat(temp_string,$2);
+					strcat(temp_string,")");
+					strcpy($$,temp_string);
+					strcpy(temp_string,"");
+				}
+				| NOT LB LOGICAL_EXPN1 RB{
+					strcpy(temp_string, "!");
+					strcat(temp_string,"(");
+					strcat(temp_string,$3);
+					strcat(temp_string,")");
+					strcpy($$,temp_string);
+					strcpy(temp_string,"");
+
+				}
+				| LOGICAL_EXPN2 {strcpy($$,$1);}
+LOGICAL_EXPN2	: A_EXPN COMP_OPERATOR A_EXPN{
+					strcpy(temp_string,$1.code);strcat(temp_string,$2);
+					strcat(temp_string,$3.code);strcpy($$,temp_string);
+					strcpy(temp_string, "");
+				}
+COMP_OPERATOR	: ET {strcpy($$,"==");} | IS {strcpy($$,"==");} | GT {strcpy($$,">");} | LT {strcpy($$,"<");} 
+				| GTE {strcpy($$,">=");} | LTE {strcpy($$,"<=");} | ISNOT {strcpy($$,"!=");} | NE {strcpy($$,"!=");}
+LOGICAL_OPERATOR	: AND {strcpy($$," && ");} | OR {strcpy($$," || ");}
 
 A_EXPN	: A_EXPN OPR_PREC1 A_EXPN	
 				{	
@@ -703,7 +756,6 @@ INDENTATION : TAB {/*printf("<TAB>");*/$$ = 1;} | INDENTATION TAB {/*printf("<IN
 
 void push_table(int mode){
 	if(mode){
-		//print_tabs();
 		printf("{\n");
 	}
     struct symbol_table_stack * node = (struct symbol_table_stack *)malloc(sizeof(struct symbol_table_stack));
@@ -723,7 +775,7 @@ void push_table(int mode){
 
 void pop_table(){
 	//display_symbol_table();
-	//print_tabs();
+	print_tabs(0);
 	printf("}\n");
     if(pointer != NULL){
         if(pointer->prev == NULL){
@@ -900,7 +952,7 @@ void check_ind(int current_ind){
 	if(current_ind != pointer->ind_level){
 		yyerror("Indentation Error");exit(0);
 	}
-	print_tabs();
+	print_tabs(1);
 }
 struct functions func_lookup(char str[30]){
 	for (int i = 0; i <= func_count; i++){
@@ -908,12 +960,21 @@ struct functions func_lookup(char str[30]){
 			return func_list[i];
 		}
 	}
-	printf("Parsing Failed\nLine Number: %d Function: %s is not defined.",yylineno, str);
+	printf("Parsing Failed\nLine Number: %d Function: %s is not defined.\n",yylineno, str);
 	exit(0);
 	return func_list[0];
 }
-void print_tabs(){
-	for(int i = 0; i<pointer->ind_level;i++){
+void print_tabs(int mode){
+	int indd;
+	if(mode==0){
+		if(pointer->prev!=NULL)
+			indd=pointer->prev->ind_level;
+		else
+			indd=0;
+	}
+	else
+		indd=pointer->ind_level;
+	for(int i = 0; i<indd;i++){
 		printf("  ");
 	}
 }
