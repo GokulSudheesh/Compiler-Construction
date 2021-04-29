@@ -101,6 +101,11 @@
 %type<code>OPR_PREC2
 %type<code>FUNC_CALL
 %type<code>FUNC_ARG
+%type<code>ARRAY_DECLARATION
+%type<code>ARRAY_SIZE
+%type<code>PTR_VAR
+%type<code>PTR_DEPTH
+%type<code>VAR_LIST2
 
 %start prm
 
@@ -163,11 +168,11 @@ FUNC_DEC : VAR {
 		}
 		| ARRAY_DECLARATION {
 			$$.data_depth = var_list[var_list_ind-1].dims+1;
-			strcpy($$.code,"");
+			strcpy($$.code,$1);
 		}
 		| PTR_VAR {
 			$$.data_depth = var_list[var_list_ind-1].ptr_depth;
-			strcpy($$.code,"");
+			strcpy($$.code,$1);
 		}
 //MAIN_FUNC_BODY : DATA_TYPE AT MAIN LB RB COLON {push_table(1);} BODY {pop_table();}
 
@@ -212,21 +217,29 @@ VAR_LIST : VAR COMA VAR_LIST {
 			    }
 	| ARRAY_DECLARATION COMA VAR_LIST {
 		//printf("<ARRAY_DECLARATION COMA VAR_LIST>");
+		strcpy(temp_string,$1);strcat(temp_string,",");
+		strcat(temp_string,$3);strcpy($$,temp_string);
+		strcpy(temp_string,"");
 	}
-	| PTR_VAR COMA VAR_LIST {strcat($$,"");}
-	| VAR_LIST2 COMA VAR_LIST {strcat($$,"");}
+	| PTR_VAR COMA VAR_LIST {
+		strcpy(temp_string,$1);strcat(temp_string,",");
+		strcat(temp_string,$3);strcpy($$,temp_string);
+		strcpy(temp_string,"");
+	}
+	| VAR_LIST2 COMA VAR_LIST {
+		strcpy(temp_string,$1);strcat(temp_string,",");
+		strcat(temp_string,$3);strcpy($$,temp_string);
+		strcpy(temp_string,"");
+	}
 	| VAR {
 			strcpy(var_list[var_list_ind].var_name,$1);
 			var_list_ind++;
 			strcpy($$, $1);
 			//insert_to_table($1,current_data_type);
 	      }
-	| ARRAY_DECLARATION {
-		//printf("<ARRAY_DECLARATION>");
-		{strcat($$,"");}
-	}
-	| PTR_VAR {strcat($$,"");}
-	| VAR_LIST2 {strcat($$,"");}
+	| ARRAY_DECLARATION {strcpy($$,$1);}
+	| PTR_VAR {strcpy($$,$1);}
+	| VAR_LIST2 {strcpy($$,$1);}
 VAR_LIST2 : VAR EQ A_EXPN {
 				if ($3.data_depth!=0){
 					yyerror("Incompatible pointer type in assignment");
@@ -236,6 +249,11 @@ VAR_LIST2 : VAR EQ A_EXPN {
 				strcpy(var_list[var_list_ind].var_name,$1);
 				var_list[var_list_ind].LHS_type = $3.type+1;
 				var_list_ind++;
+				strcpy(temp_string,$1);
+				strcat(temp_string,"=");
+				strcat(temp_string,$3.code);
+				strcpy($$,temp_string);
+				strcpy(temp_string,"");
 			}
 PTR_VAR :	PTR_DEPTH VAR {
 				//printf("<PTR_DEPTH VAR>");
@@ -243,32 +261,52 @@ PTR_VAR :	PTR_DEPTH VAR {
 				strcpy(var_list[var_list_ind].var_name,$2);
 				var_list_ind++;
 				//var_list[var_list_ind].ptr_depth = 0;
+				strcpy(temp_string, $1);
+				strcat(temp_string, $2);
+				strcpy($$, temp_string);
+				strcpy(temp_string,"");
 			}
 PTR_DEPTH :	MUL PTR_DEPTH {
 				//printf("<MUL PTR_DEPTH>");
 				var_list[var_list_ind].ptr_depth++;
-
+				strcpy($$,"*");
 			} 
 			| MUL {				
 				//printf("<MUL>");
 				var_list[var_list_ind].ptr_depth = 0;
 				var_list[var_list_ind].ptr_depth++;
+				strcpy($$,"*");
 			}
 ARRAY_DECLARATION: VAR ARRAY_SIZE {
 		var_list[var_list_ind].is_Array = 1;
 		strcpy(var_list[var_list_ind].var_name,$1);
 		var_list_ind++;
 		//insert_to_table($1,current_data_type);
+		strcpy(temp_string,$1);
+		strcat(temp_string,$2);
+		strcpy($$,temp_string);
+		strcpy(temp_string,"");
 	}
 ARRAY_SIZE : ARRAY_SIZE LSQRB INT_NUMBER RSQRB {
 				var_list[var_list_ind].dims++;
 				var_list[var_list_ind].array_dim[var_list[var_list_ind].dims] = $3.integer_val;
 				//printf("<ARRAY_SIZE LSQRB %d RSQRB>", $3);
+				strcpy(temp_string, $1);
+				strcat(temp_string,"[");
+				strcat(temp_string,$3.code);
+				strcat(temp_string,"]");
+				strcpy($$,temp_string);
+				strcpy(temp_string,"");
 			}
 			| LSQRB INT_NUMBER RSQRB {
 				var_list[var_list_ind].dims = 0;
 				var_list[var_list_ind].array_dim[var_list[var_list_ind].dims] = $2.integer_val;
 				//printf("<LSQRB %d RSQRB>", $2);
+				strcpy(temp_string,"[");
+				strcat(temp_string,$2.code);
+				strcat(temp_string,"]");
+				strcpy($$,temp_string);
+				strcpy(temp_string,"");
 			}
 
 DATA_TYPE : INT {
