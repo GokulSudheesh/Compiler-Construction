@@ -99,6 +99,8 @@
 %type<code>UNARY_OPERATORS
 %type<code>OPR_PREC1
 %type<code>OPR_PREC2
+%type<code>FUNC_CALL
+%type<code>FUNC_ARG
 
 %start prm
 
@@ -205,6 +207,7 @@ VAR_LIST : VAR COMA VAR_LIST {
 				var_list_ind++;
 				strcpy(temp_string,$1);strcat(temp_string,",");
 				strcat(temp_string,$3);strcpy($$,temp_string);
+				strcpy(temp_string,"");
 				//insert_to_table($1,current_data_type);
 			    }
 	| ARRAY_DECLARATION COMA VAR_LIST {
@@ -297,8 +300,7 @@ DATA_TYPE : INT {
 PROGRAM_STATEMENTS :	ASSIGNMENT_STATEMENT
 				| READ_STATEMENT
 				| INCR_DCR_EXPN
-				| FUNC_CALL
-				| LB LOGICAL_EXPN RB QMARK LCB {push_table(1);} BODY2 RCB {pop_table();} COLON LCB {push_table(1);} BODY2 RCB {pop_table();}
+				| FUNC_CALL {printf("%s;\n",$1);}
 				| CONDITIONAL_STATEMENTS
 				| WHILE LB LOGICAL_EXPN RB COLON {push_table(1);} BODY2 //RCB {pop_table();}
 				| DO COLON {push_table(1);} BODY2 WHILE LB LOGICAL_EXPN RB
@@ -306,12 +308,27 @@ PROGRAM_STATEMENTS :	ASSIGNMENT_STATEMENT
 				| FOR LB DECLARATION_STATEMENTS SC LOGICAL_EXPN SC INCR_DCR_EXPN RB COLON {push_table(1);} BODY2
 				| {/*Epsilon*/}
 
-FUNC_CALL : VAR LB {func_column = func_lookup($1);} FUNC_ARG RB
+FUNC_CALL : VAR LB {func_column = func_lookup($1);} FUNC_ARG RB {
+				if(args!=-1){
+					printf("\nError: Too few arguments to function ‘%s’\n",$1);exit(0);
+				}
+				strcpy(temp_string, $1);
+				strcat(temp_string, "(");
+				strcat(temp_string, $4);
+				strcat(temp_string, ")");
+				strcpy($$, temp_string);
+				strcpy(temp_string, "");
+			}
 FUNC_ARG : A_EXPN COMA FUNC_ARG {
 			if($1.type != func_column.para_sym[args].type || func_column.para_sym[args].data_depth != $1.data_depth){
 				yyerror("Type mismatch in function arguments.");exit(0);
 			}
-			args--;		
+			args--;
+			strcpy(temp_string, $1.code);
+			strcat(temp_string, ", ");
+			strcat(temp_string, $3);
+			strcpy($$, temp_string);
+			strcpy(temp_string, "");		
 		}
 		| A_EXPN {
 			args = func_column.paras-1;
@@ -319,8 +336,9 @@ FUNC_ARG : A_EXPN COMA FUNC_ARG {
 				yyerror("Type mismatch in function arguments.");exit(0);
 			}
 			args--;
+			strcpy($$,$1.code);
 		}
-		| {/*Epsilon*/}
+		| {/*Epsilon*/strcpy($$,"");}
 
 WRITE_STATEMENT : PRINTF LB Q_STRING {RWmode = 2; format_string($3);} RB{
 					RWmode = 0;
@@ -505,7 +523,7 @@ A_EXPN	: A_EXPN OPR_PREC1 A_EXPN
 			$$.type = func_column.func_type.type;//Return types
 			$$.data_depth = func_column.func_type.data_depth;
 			$$.isValue = func_column.func_type.isValue;
-
+			strcpy($$.code,$1);
 		}
 		| INT_NUMBER {
 			$$.type = 0;
@@ -531,7 +549,11 @@ A_EXPN	: A_EXPN OPR_PREC1 A_EXPN
 					$$.type=$2.type;
 					$$.data_depth=$2.data_depth-1;
 					$$.isValue=0;
-				}										
+				}
+				strcpy(temp_string,"*");
+				strcat(temp_string, $2.code);
+				strcpy($$.code,temp_string);
+				strcpy(temp_string,"");										
 			}
 		| ARRAY_ACCESS {
 			if(dims!=get_array_dimensions($1.var_name) && (RWmode == 0)){
@@ -540,6 +562,7 @@ A_EXPN	: A_EXPN OPR_PREC1 A_EXPN
 			$$.type=$1.type;
 			$$.data_depth=$1.data_depth;
 			$$.isValue=0;
+			strcpy($$.code, $1.code);
 			dims=0;
 		}			
 		| AMPER A_EXPN	
@@ -577,6 +600,12 @@ ARRAY_ACCESS : ARRAY_ACCESS LSQRB A_EXPN RSQRB
 					$$.data_depth=$1.data_depth-1;
 					$$.isValue=0;
 					strcpy($$.var_name, $1.var_name);
+					strcpy(temp_string, $1.code);
+					strcat(temp_string, "[");
+					strcat(temp_string, $3.code);
+					strcat(temp_string, "]");
+					strcpy($$.code, temp_string);
+					strcpy(temp_string, "");
 				}
 			}
 			| VAR LSQRB A_EXPN RSQRB{
@@ -598,6 +627,12 @@ ARRAY_ACCESS : ARRAY_ACCESS LSQRB A_EXPN RSQRB
 					$$.data_depth = column.pointerDepth-1;
 					$$.isValue = 0;
 					strcpy($$.var_name, $1);
+					strcpy(temp_string, $1);
+					strcat(temp_string, "[");
+					strcat(temp_string, $3.code);
+					strcat(temp_string, "]");
+					strcpy($$.code, temp_string);
+					strcpy(temp_string,"");
 				}
 			}
 
