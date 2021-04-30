@@ -15,6 +15,7 @@
 	int RWmode; // 1 -> read mode, 2 -> write mode
 	int dims;
 	char temp_string[100];
+	char *temp_char;
 
 	struct symbol_table{char var_name[30]; int type; int dim; int pointerDepth; int dim_bounds[5];};
 	struct symbol_table_stack{
@@ -42,6 +43,7 @@
 	extern void format_string(char str[200]);
 	extern void check_ind(int current_ind);
 	struct functions func_lookup(char var[30]);
+	void check_func(char str[30]);
 	extern void print_tabs(int mode);//0 -> prev ind level | 1 -> current ind level
 %}
 
@@ -69,8 +71,8 @@
 			char code[100];
 		}EXPN_type;
 }
-%token HASH IMPORT AT VOID RETURN TAB LB RB LCB RCB LSQRB RSQRB SC COLON QMARK COMA IF ELSE_IF ELSE FOR DO 
-%token WHILE IN PRINTF SCANF ET EQ IS GT LT GTE LTE NE ISNOT AMPER AND OR NOT DQUOTE PLUS MINUS MUL DIV 
+%token HASH IMPORT AT SET VOID RETURN TAB LB RB LCB RCB LSQRB RSQRB SC COLON QMARK COMA IF ELSE_IF ELSE FOR DO 
+%token WHILE IN PRINT PRINTLN SCANF ET EQ IS GT LT GTE LTE NE ISNOT AMPER AND OR NOT DQUOTE PLUS MINUS MUL DIV 
 %token MOD EXP UPLUS UMINUS
 
 %left PLUS MINUS
@@ -114,6 +116,8 @@
 %type<code>LOGICAL_EXPN2
 %type<code>COMP_OPERATOR
 %type<code>LOGICAL_OPERATOR
+%type<code>VAR_LIST_OP
+%type<code>VAR_LIST_IP
 
 %start prm
 
@@ -128,7 +132,7 @@ HEADERS : HEADER HEADERS | HEADER
 HEADER	: IMPORT HEADER_FILE {printf("#include <%s>\n",$2);}| IMPORT Q_STRING {format_string($2);printf("#include %s\n",$2);}
 
 FUNCTIONS : FUNCTION_BODY | FUNCTION_BODY FUNCTIONS {/*Epsilon*/}
-FUNCTION_BODY : DATA_TYPE AT {printf("%s ",$1.code);} FUNC_DEPTH VAR {func_count++; strcpy(func_list[func_count].func_name, $5); func_list[func_count].func_type.type = $1.type; func_list[func_count].func_type.data_depth = $4.data_depth;printf("%s",$5);}
+FUNCTION_BODY : DATA_TYPE AT {printf("%s ",$1.code);} FUNC_DEPTH VAR {check_func($5);func_count++; strcpy(func_list[func_count].func_name, $5); func_list[func_count].func_type.type = $1.type; func_list[func_count].func_type.data_depth = $4.data_depth;printf("%s",$5);}
 			FUNC_PARAM FUNC_BODY {
 				if(func_list[func_count].func_type.type != $8 && strcmp(func_list[func_count].func_name, "main") != 0){
 					yyerror("Syntax Error: Function has no return statement.");exit(0);
@@ -139,7 +143,7 @@ FUNCTION_BODY : DATA_TYPE AT {printf("%s ",$1.code);} FUNC_DEPTH VAR {func_count
 FUNC_DEPTH : MUL FUNC_DEPTH {$$.data_depth++;printf("*");} | MUL {$$.data_depth++;printf("*");} | /*Epsilon*/ {$$.data_depth=0;}
 
 FUNC_PARAM : LB {push_table(0);printf("(");} FUNC_PARAS {/*display_function_table();*/} RB COLON {printf("){\n");}
-FUNC_BODY : BODY RETURN A_EXPN {
+FUNC_BODY : BODY2 RETURN A_EXPN {
 				if($3.type != func_list[func_count].func_type.type || $3.data_depth != func_list[func_count].func_type.data_depth){
 					yyerror("Return type does not match function type.");exit(0);
 				}
@@ -147,7 +151,7 @@ FUNC_BODY : BODY RETURN A_EXPN {
 				func_list[func_count].func_type.isValue = $3.isValue;
 				printf("return %s;\n",$3.code);
 			} 
-			| BODY {$$ = -1;}
+			| BODY2 {$$ = -1;}
 FUNC_PARAS : FUNC_PARAS2 COMA {printf(",");} FUNC_PARAS | FUNC_PARAS2 
 FUNC_PARAS2 : FUNC_DEC COLON COLON DATA_TYPE {
 				func_list[func_count].para_sym[func_list[func_count].paras].type = $4.type;
@@ -184,10 +188,10 @@ FUNC_DEC : VAR {
 		}
 //MAIN_FUNC_BODY : DATA_TYPE AT MAIN LB RB COLON {push_table(1);} BODY {pop_table();}
 
-BODY	: INDENTATION {/*printf("Level %d\n", $1);*/check_ind($1);} DECLARATION_STATEMENTS {printf("%s;\n",$3);} BODY2
+//BODY	: INDENTATION {/*printf("Level %d\n", $1);*/check_ind($1);} DECLARATION_STATEMENTS {printf("%s;\n",$3);} BODY2
 BODY2	: /*Epsilon*/ | INDENTATION {/*printf("Level %d\n", $1);*/check_ind($1);} DECLARATION_STATEMENTS {printf("%s;\n",$3);} BODY2 | INDENTATION {/*printf("Level %d\n", $1);*/check_ind($1);} PROGRAM_STATEMENTS BODY2
 
-DECLARATION_STATEMENTS: AT VAR_LIST COLON COLON DATA_TYPE{
+DECLARATION_STATEMENTS: SET VAR_LIST COLON COLON DATA_TYPE{
 						
 						for(int i = 0; i < var_list_ind; i++){
 							if(var_list[i].LHS_type > 0){
@@ -218,7 +222,6 @@ DECLARATION_STATEMENTS: AT VAR_LIST COLON COLON DATA_TYPE{
 						strcpy($$, temp_string);
 						strcpy(temp_string, "");
 					} 
-					| WRITE_STATEMENT {strcpy($$, "");}
 VAR_LIST : VAR COMA VAR_LIST {
 				strcpy(var_list[var_list_ind].var_name,$1);
 				var_list_ind++;
@@ -281,7 +284,8 @@ PTR_VAR :	PTR_DEPTH VAR {
 PTR_DEPTH :	MUL PTR_DEPTH {
 				//printf("<MUL PTR_DEPTH>");
 				var_list[var_list_ind].ptr_depth++;
-				strcpy($$,"*");
+				strcpy(temp_string,"*");strcat(temp_string,$2);
+				strcpy($$,temp_string);strcpy(temp_string,"");
 			} 
 			| MUL {				
 				//printf("<MUL>");
@@ -349,6 +353,7 @@ DATA_TYPE : INT {
  
 PROGRAM_STATEMENTS :	ASSIGNMENT_STATEMENT {printf("%s;\n",$1);}
 				| READ_STATEMENT
+				| WRITE_STATEMENT
 				| INCR_DCR_EXPN {printf("%s;\n",$1.code);}
 				| FUNC_CALL {printf("%s;\n",$1);}
 				| CONDITIONAL_STATEMENTS
@@ -404,15 +409,22 @@ WRITE_STATEMENT : PRINTF LB Q_STRING {RWmode = 2; format_string($3);} RB{
 					if(format_spec_counter!=0){
 						yyerror("More arguments expected to printf function."); exit(0);
 					}
+					temp_char = $3+1;
+					printf("%s);\n",temp_char);
 				} 
 				| PRINTF LB Q_STRING {RWmode = 2; format_string($3);} COMA VAR_LIST_OP RB{
 					//printf("%d",format_spec_counter);
 					RWmode = 0;
 					if(format_spec_counter != 0){
-						printf("Parsing Failed\nLine Number %d: %d more arguments required.\n", yylineno, format_spec_counter);
+						yyerror("more arguments required.");
+						//printf("Parsing Failed\nLine Number %d: more arguments required.\n", yylineno);
 						exit(0);
 					}
+					temp_char = $3+1;
+					printf("%s,%s);\n",temp_char,$6);
 				}
+				| PRINTF LB RB {printf("\");\n");}
+PRINTF : PRINT {printf("printf(\"");} | PRINTLN {printf("printf(\"\\n");} 
 VAR_LIST_OP : A_EXPN COMA VAR_LIST_OP {
 				//printf("<A_EXPN COMA VAR_LIST_OP>");
 				if(array_format_spec[--format_spec_counter] == 4){
@@ -422,7 +434,12 @@ VAR_LIST_OP : A_EXPN COMA VAR_LIST_OP {
 				}
 				else if (array_format_spec[format_spec_counter] != $1.type){
 					yyerror("Type mismatch in arguments."); exit(0);
-				}			
+				}	
+				strcpy(temp_string,$1.code);
+				strcat(temp_string,",");
+				strcat(temp_string,$3);
+				strcpy($$,temp_string);
+				strcpy(temp_string,"");		
 			}
 			| A_EXPN {
 				//printf("<A_EXPN>");
@@ -433,10 +450,11 @@ VAR_LIST_OP : A_EXPN COMA VAR_LIST_OP {
 				}
 				else if (array_format_spec[format_spec_counter] != $1.type){
 					yyerror("Type mismatch in arguments."); exit(0);
-				}				
+				}
+				strcpy($$,$1.code);		
 			}
 
-READ_STATEMENT : SCANF LB Q_STRING {RWmode = 1; format_string($3);} COMA VAR_LIST_IP RB{RWmode = 0;}
+READ_STATEMENT : SCANF LB Q_STRING {RWmode = 1; format_string($3);} COMA VAR_LIST_IP RB{printf("scanf(%s,%s);\n",$3,$6);RWmode = 0;}
 VAR_LIST_IP : A_EXPN COMA VAR_LIST_IP {
 				//printf("<A_EXPN COMA VAR_LIST_IP>");
 				if (array_format_spec[--format_spec_counter] != $1.type){
@@ -444,7 +462,10 @@ VAR_LIST_IP : A_EXPN COMA VAR_LIST_IP {
 				}
 				else if ($1.data_depth != 1){
 					yyerror("Error in reference depth."); exit(0);
-				}		
+				}	
+				strcpy(temp_string,$1.code);strcat(temp_string,",");
+				strcat(temp_string,$3);strcpy($$,temp_string);
+				strcpy(temp_string,"");	
 			}
 			| A_EXPN {
 				//printf("<A_EXPN>");
@@ -453,7 +474,8 @@ VAR_LIST_IP : A_EXPN COMA VAR_LIST_IP {
 				}
 				else if ($1.data_depth != 1){
 					yyerror("Error in reference depth."); exit(0);
-				}				
+				}
+				strcpy($$,$1.code);				
 			}
 
 CONDITIONAL_STATEMENTS : IF_STATEMENT | IF_STATEMENT ELSE_STATEMENT | IF_STATEMENT ELSE_IF_STATEMENT | IF_STATEMENT ELSE_IF_STATEMENT ELSE_STATEMENT
@@ -963,6 +985,13 @@ struct functions func_lookup(char str[30]){
 	printf("Parsing Failed\nLine Number: %d Function: %s is not defined.\n",yylineno, str);
 	exit(0);
 	return func_list[0];
+}
+void check_func(char str[30]){
+	for (int i = 0; i <= func_count; i++){
+		if(strcmp(str, func_list[i].func_name)==0){
+			yyerror("Function already exists.");exit(0);
+		}
+	}
 }
 void print_tabs(int mode){
 	int indd;

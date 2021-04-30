@@ -20,14 +20,16 @@
 "while"	{return WHILE;}
 "in" {return IN;}
 "@" {return AT;}
+"set" {return SET;}
 "void" {return VOID;}
 "int"	{yylval.data_type=0;return INT;}
 "char" {yylval.data_type=1; return CHAR;}
 "float" {yylval.data_type=2; return FLOAT;}
 "double" {yylval.data_type=3; return DOUBLE;}
 "return" {return RETURN;}
-"printf" {return PRINTF;}
-"scanf" {return SCANF;}
+"print" {return PRINT;}
+"println" {return PRINTLN;}
+"read" {return SCANF;}
 "#" {return HASH;}
 "("	{return LB;}
 ")"	{return RB;}
