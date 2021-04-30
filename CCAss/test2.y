@@ -280,6 +280,17 @@ VAR_LIST2 : VAR EQ A_EXPN {
 				strcpy($$,temp_string);
 				strcpy(temp_string,"");
 			}
+			| VAR EQ Q_STRING {
+				strcpy(var_list[var_list_ind].var_name,$1);
+				var_list[var_list_ind].LHS_type = 2;
+				var_list[var_list_ind].is_Array = 1;
+				var_list[var_list_ind].dims=0;
+				var_list_ind++;
+				strcpy(temp_string,$1);
+				strcat(temp_string,"[");strcat(temp_string,"200");strcat(temp_string,"]");
+				strcat(temp_string,"=");strcat(temp_string,$3);
+				strcpy($$,temp_string);strcpy(temp_string,"");
+			}
 PTR_VAR :	PTR_DEPTH VAR {
 				//printf("<PTR_DEPTH VAR>");
 				//insert_to_table($2,current_data_type);
