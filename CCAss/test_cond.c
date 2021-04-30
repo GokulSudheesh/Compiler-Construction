@@ -1,7 +1,7 @@
 import stdio.h
 int@main():
-    @var1,var2::int
-    @var3,var4::int
+    set var1,var2::int
+    set var3,var4::int
     if(var1 is not var2):
         var1=var2++
         if(var2 is var1):

@@ -1,13 +1,13 @@
 import stdio.h
 int @ *getarray(*a::int):
-    printf("Enter the elements in an array : ") 
-    for(@i=0::int;i<5;i++): 
-        scanf("%d", &a[i])
+    print("Enter the elements in an array : ") 
+    for(set i=0::int;i<5;i++): 
+        read("%d", &a[i])
     return a
 int @ main():
-    @a[5],*n::int
+    set a[5],*n::int
     n=getarray(a)
-    printf("\nElements of array are :")  
-    for(@i=0::int;i<5;i++): 
-        printf("%d", n[i])
-    printf("\n")
+    println("Elements of array are :")  
+    for(set i=0::int;i<5;i++): 
+        print("%d", n[i])
+    println()
