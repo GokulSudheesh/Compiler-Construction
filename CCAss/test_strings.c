@@ -17,4 +17,6 @@ int @ main():
         println("%s < %s",string_1,string5)
     if(string_2 is "string1"):
         println("%s == string1",string_2)
+    if(string_2[0] is 's'):
+        println("YES")
     return 0
