@@ -66,6 +66,7 @@
 ([" "]{4})*\/\/(.*) {/*Single line comment*/};
 ([" "]{4})*\/\*(.*\n)*.*\*\/  {/*Regular expression for multi line comment*/};	
 \"([^\\\"]|\\.)*\" {strcpy(yylval.q_string,yytext); return Q_STRING;}
+\'([^\\\']|\\.){1}\' {strcpy(yylval.q_string,yytext); return Q_CHAR;}
 ([A-Z]+|[a-z]+)([A-Z]+|[a-z]+|["_"]+|[0-9]+)* {strcpy(yylval.var_name,yytext);return VAR;}
 [0-9]+ {yylval.Number.integer_val = atoi(yytext); strcpy(yylval.Number.code,yytext); return INT_NUMBER;}
 [0-9]+(\.[0-9]+) {yylval.Number.float_val = atof(yytext); strcpy(yylval.Number.code,yytext); return FLOAT_NUMBER;}

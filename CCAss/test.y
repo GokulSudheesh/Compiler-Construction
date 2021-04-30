@@ -92,6 +92,7 @@
 %token<Number>INT_NUMBER
 %token<Number>FLOAT_NUMBER
 %token<q_string>Q_STRING
+%token<q_string>Q_CHAR
 %token<var_name>HEADER_FILE
 %type<line_ind>INDENTATION
 %type<DATA_type>DATA_TYPE
@@ -114,6 +115,7 @@
 %type<code>PTR_DEPTH
 %type<code>VAR_LIST2
 %type<code>ASSIGNMENT_STATEMENT
+%type<code>ASSIGNMENT_STATEMENT_CHARS
 %type<code>LOGICAL_EXPN
 %type<code>LOGICAL_EXPN1
 %type<code>LOGICAL_EXPN2
@@ -280,6 +282,25 @@ VAR_LIST2 : VAR EQ A_EXPN {
 				strcpy($$,temp_string);
 				strcpy(temp_string,"");
 			}
+			| VAR EQ Q_STRING {
+				strcpy(var_list[var_list_ind].var_name,$1);
+				var_list[var_list_ind].LHS_type = 2;
+				var_list[var_list_ind].is_Array = 1;
+				var_list[var_list_ind].dims=0;
+				var_list_ind++;
+				strcpy(temp_string,$1);
+				strcat(temp_string,"[");strcat(temp_string,"200");strcat(temp_string,"]");
+				strcat(temp_string,"=");strcat(temp_string,$3);
+				strcpy($$,temp_string);strcpy(temp_string,"");
+			}
+			| VAR EQ Q_CHAR {
+				strcpy(var_list[var_list_ind].var_name,$1);
+				var_list[var_list_ind].LHS_type = 2;
+				var_list_ind++;
+				strcpy(temp_string,$1);
+				strcat(temp_string,"=");strcat(temp_string,$3);
+				strcpy($$,temp_string);strcpy(temp_string,"");
+			}
 PTR_VAR :	PTR_DEPTH VAR {
 				//printf("<PTR_DEPTH VAR>");
 				//insert_to_table($2,current_data_type);
@@ -362,6 +383,7 @@ DATA_TYPE : INT {
 	}
  
 PROGRAM_STATEMENTS :	ASSIGNMENT_STATEMENT {printf("%s;\n",$1);}
+				| ASSIGNMENT_STATEMENT_CHARS {printf("%s;\n",$1);}
 				| READ_STATEMENT
 				| WRITE_STATEMENT
 				| INCR_DCR_EXPN {printf("%s;\n",$1.code);}
@@ -493,6 +515,22 @@ IF_STATEMENT : IF LB LOGICAL_EXPN RB COLON {printf("if(%s)",$3);push_table(1);} 
 ELSE_IF_STATEMENT : ELSE_IF LB LOGICAL_EXPN RB COLON {printf("else if(%s)",$3);push_table(1);} BODY2 /*RCB {pop_table();}*/ | ELSE_IF_STATEMENT ELSE_IF LB LOGICAL_EXPN RB COLON {printf("else if(%s)",$4);push_table(1);} BODY2 //RCB {pop_table();}
 ELSE_STATEMENT : ELSE COLON {printf("else");push_table(1);} BODY2 //RCB {pop_table();}
 
+ASSIGNMENT_STATEMENT_CHARS : A_EXPN EQ Q_STRING {
+								if($1.type != 1 || $1.data_depth != 1){
+									yyerror("Type mismatch in expression.");exit(0);
+								}
+								strcpy(temp_string,"strcpy(");strcat(temp_string,$1.code);
+								strcat(temp_string,",");strcat(temp_string,$3);strcat(temp_string,")");
+								strcpy($$,temp_string);strcpy(temp_string,"");
+							}
+							| A_EXPN EQ Q_CHAR {
+								if($1.type != 1 || $1.data_depth != 0){
+									yyerror("Type mismatch in expression.");exit(0);
+								}
+								strcpy(temp_string,$1.code);strcat(temp_string,"=");
+								strcat(temp_string,$3);strcpy($$,temp_string);
+								strcpy(temp_string,"");
+							}
 ASSIGNMENT_STATEMENT : A_EXPN EQ A_EXPN
 				{
 					if($1.type!=$3.type)
