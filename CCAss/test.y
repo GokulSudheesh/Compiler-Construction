@@ -16,6 +16,7 @@
 	int RWmode; // 1 -> read mode, 2 -> write mode
 	int dims;
 	char temp_string[100];
+	char temp_string2[100];
 	char *temp_char;
 
 	struct symbol_table{char var_name[30]; int type; int dim; int pointerDepth; int dim_bounds[5];};
@@ -44,6 +45,7 @@
 	extern void display_symbol_table();
 	extern void display_function_table();
 	extern void format_string(char str[200]);
+	int string_len(char str[200]);
 	extern void check_ind(int current_ind);
 	struct functions func_lookup(char var[30]);
 	void check_func(char str[30]);
@@ -289,7 +291,10 @@ VAR_LIST2 : VAR EQ A_EXPN {
 				var_list[var_list_ind].dims=0;
 				var_list_ind++;
 				strcpy(temp_string,$1);
-				strcat(temp_string,"[");strcat(temp_string,"200");strcat(temp_string,"]");
+				strcat(temp_string,"[");
+				sprintf(temp_string2, "%d", string_len($3));
+				strcat(temp_string,temp_string2);
+				strcat(temp_string,"]");
 				strcat(temp_string,"=");strcat(temp_string,$3);
 				strcpy($$,temp_string);strcpy(temp_string,"");
 			}
@@ -524,7 +529,7 @@ ASSIGNMENT_STATEMENT_CHARS : A_EXPN EQ Q_STRING {
 								strcpy($$,temp_string);strcpy(temp_string,"");
 							}
 							| A_EXPN EQ Q_CHAR {
-								if($1.type != 1 || $1.data_depth != 0){
+								if($1.type != 1 || $1.data_depth != 0 || $1.isValue != 0){
 									yyerror("Type mismatch in expression.");exit(0);
 								}
 								strcpy(temp_string,$1.code);strcat(temp_string,"=");
@@ -582,8 +587,71 @@ LOGICAL_EXPN1	: LOGICAL_EXPN1 LOGICAL_OPERATOR LOGICAL_EXPN1{
 				}
 				| LOGICAL_EXPN2 {strcpy($$,$1);}
 LOGICAL_EXPN2	: A_EXPN COMP_OPERATOR A_EXPN{
+					if($1.type == 1 && $3.type == 1 && $1.data_depth == 1 && $3.data_depth == 1){
+						strcpy(temp_string,"strcmp(");strcat(temp_string,$1.code);
+						strcat(temp_string,",");strcat(temp_string,$3.code);strcat(temp_string,")");
+						if(strcmp($2,"==")==0 || strcmp($2,"is")==0){
+							strcat(temp_string,"==");strcat(temp_string,"0");	
+						}
+						if(strcmp($2,"!=")==0 || strcmp($2,"is not")==0){
+							strcat(temp_string,"!=");strcat(temp_string,"0");
+						}
+						if(strcmp($2,">")==0){
+							strcat(temp_string,">");strcat(temp_string,"0");
+						}
+						if(strcmp($2,"<")==0){
+							strcat(temp_string,"<");strcat(temp_string,"0");
+						}
+						if(strcmp($2,"<=")==0){
+							strcat(temp_string,"<=");strcat(temp_string,"0");
+						}
+						if(strcmp($2,">=")==0){
+							strcat(temp_string,">=");strcat(temp_string,"0");
+						}
+						strcpy($$,temp_string);strcpy(temp_string,"");
+					}
+					else if($1.type == $3.type){
+						strcpy(temp_string,$1.code);strcat(temp_string,$2);
+						strcat(temp_string,$3.code);strcpy($$,temp_string);
+						strcpy(temp_string, "");
+					}
+					else{
+						yyerror("Type mismatch in expression.");exit(0);
+					}
+					
+				}
+				| A_EXPN COMP_OPERATOR Q_STRING{
+					if($1.type!=1 || $1.data_depth!=1){
+						yyerror("Type mismatch in expression.");exit(0);
+					}
+					strcpy(temp_string,"strcmp(");strcat(temp_string,$1.code);
+					strcat(temp_string,",");strcat(temp_string,$3);strcat(temp_string,")");
+					if(strcmp($2,"==")==0 || strcmp($2,"is")==0){
+						strcat(temp_string,"==");strcat(temp_string,"0");	
+					}
+					if(strcmp($2,"!=")==0 || strcmp($2,"is not")==0){
+						strcat(temp_string,"!=");strcat(temp_string,"0");
+					}
+					if(strcmp($2,">")==0){
+						strcat(temp_string,">");strcat(temp_string,"0");
+					}	
+					if(strcmp($2,"<")==0){
+						strcat(temp_string,"<");strcat(temp_string,"0");
+					}
+					if(strcmp($2,"<=")==0){
+						strcat(temp_string,"<=");strcat(temp_string,"0");
+					}
+					if(strcmp($2,">=")==0){
+						strcat(temp_string,">=");strcat(temp_string,"0");
+					}
+					strcpy($$,temp_string);strcpy(temp_string,"");
+				}
+				| A_EXPN COMP_OPERATOR Q_CHAR{
+					if($1.type!=1 || $1.data_depth!=0){
+						yyerror("Type mismatch in expression.");exit(0);
+					}
 					strcpy(temp_string,$1.code);strcat(temp_string,$2);
-					strcat(temp_string,$3.code);strcpy($$,temp_string);
+					strcat(temp_string,$3);strcpy($$,temp_string);
 					strcpy(temp_string, "");
 				}
 COMP_OPERATOR	: ET {strcpy($$,"==");} | IS {strcpy($$,"==");} | GT {strcpy($$,">");} | LT {strcpy($$,"<");} 
@@ -1018,6 +1086,13 @@ void format_string(char str[200]){
 			i++;
 		}
 	}
+}
+int string_len(char str[200]){
+    int len =0;
+    while(str[len]!='\0'){
+        len++;
+    }
+    return len;
 }
 void check_ind(int current_ind){
 	if(current_ind < pointer->ind_level){
