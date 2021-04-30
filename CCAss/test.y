@@ -8,6 +8,7 @@
 	struct Variables{char var_name[30];int is_Array;int dims;int array_dim[5];int ptr_depth;int LHS_type;}var_list[20];
 	int var_list_ind = 0;
 	int success = 0;
+	int isGlobal = 0;//boolean to check if the program contains global declarations
 	int current_data_type;
 	int is_modulus = 0;
 	int array_format_spec[20];
@@ -26,6 +27,7 @@
     	struct symbol_table_stack * next;
 	};
 	struct symbol_table_stack * pointer = NULL;
+	struct symbol_table_stack * global = NULL;
 
 	struct functions{char func_name[30]; struct fun_type{int type;int data_depth;int isValue;}func_type; int paras; struct paras_table{int type; int data_depth;} para_sym[10];}func_list[100];
 	int func_count = -1; 
@@ -34,6 +36,7 @@
 
 	extern void push_table(int mode);//mode==1 -> prints "{\n" else nope
 	extern void pop_table();
+	extern void push_global();
 	struct symbol_table get_column(char var[30]);
 	extern int lookup_in_table(char var[30], int mode);
 	extern void insert_to_table(char var[30], int type, int is_Array, int dims, int ptr_depth, int array_dim[5]);
@@ -122,12 +125,19 @@
 %start prm
 
 %%
-prm	: HEADERS FUNCTIONS {
+prm	: HEADERS {push_global();pointer=global;} GLOBAL_STATEMENTS {
+		pointer=NULL;
+		if(isGlobal==0)
+			global=NULL;
+	}
+	FUNCTIONS {
 		if(strcmp(func_list[func_count].func_name, "main")!=0){
 			yyerror("Main function must be declared at the end.");exit(0);
 		}
 		success=1;
 	}
+GLOBAL_STATEMENTS : DECLARATION_STATEMENTS {isGlobal=1;	printf("%s;\n",$1);} GLOBAL_STATEMENTS
+					| {/*Epsilon*/}
 HEADERS : HEADER HEADERS | HEADER
 HEADER	: IMPORT HEADER_FILE {printf("#include <%s>\n",$2);}| IMPORT Q_STRING {format_string($2);printf("#include %s\n",$2);}
 
@@ -786,6 +796,10 @@ void push_table(int mode){
     if(pointer == NULL){
 		node->ind_level = 1;
         pointer = node;
+		if(global!=NULL){
+			global->next = pointer;
+			pointer->prev = global;
+		}
     }
     else{
 		node->ind_level = pointer->ind_level + 1;
@@ -794,7 +808,11 @@ void push_table(int mode){
         pointer = node;
     }
 }
-
+void push_global(){
+	struct symbol_table_stack * node = (struct symbol_table_stack *)malloc(sizeof(struct symbol_table_stack));
+    node->var_count = -1;
+	global = node;
+}
 void pop_table(){
 	//display_symbol_table();
 	print_tabs(0);
