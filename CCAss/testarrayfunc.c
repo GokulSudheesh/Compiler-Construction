@@ -7,7 +7,7 @@ int @ *getarray(*a::int):
 int @ main():
     set a[5],*n::int
     n=getarray(a)
-    println("Elements of array are :")  
-    for(set i=0::int;i<5;i++): 
-        print("%d", n[i])
+    println("Elements of array are :")
+    for element in a:
+        print("%d ",element)
     println()
