@@ -44,6 +44,7 @@
 	extern void display_symbol_table();
 	extern void display_function_table();
 	extern void format_string(char str[200]);
+	int string_len(char str[200]);
 	extern void check_ind(int current_ind);
 	struct functions func_lookup(char var[30]);
 	void check_func(char str[30]);
@@ -55,14 +56,14 @@
 	int data_type;
 	struct 
 		{
-			int type;char code[100];
+			int type;char code[300];
 		}DATA_type;
 	char var_name[30];
-	char code[100];
+	char code[300];
 	struct{
 		int integer_val;
 		float float_val;
-		char code[100];
+		char code[300];
 	}Number;
 	char q_string[200];
 	struct 
@@ -71,7 +72,7 @@
 			int type;
 			int  data_depth;
 			int isValue;
-			char code[100];
+			char code[300];
 		}EXPN_type;
 }
 %token HASH IMPORT AT SET VOID RETURN TAB LB RB LCB RCB LSQRB RSQRB SC COLON QMARK COMA IF ELSE_IF ELSE FOR DO 
@@ -103,6 +104,8 @@
 %type<data_type>FUNC_BODY
 %type<code>DECLARATION_STATEMENTS
 %type<code>VAR_LIST
+%type<EXPN_type>ARRAY_INIT
+%type<EXPN_type>ARRAY_INIT2
 %type<code>UNARY_OPERATORS
 %type<code>OPR_PREC1
 %type<code>OPR_PREC2
@@ -221,6 +224,9 @@ DECLARATION_STATEMENTS: SET VAR_LIST COLON COLON DATA_TYPE{
 							if (var_list[i].is_Array){
 								var_list[i].is_Array = 0;
 								var_list[i].dims = 0;
+								for(int j = 0; j < 5; j++){
+									var_list[i].array_dim[j]=0;
+								}
 							}
 							if (var_list[i].ptr_depth > 0){
 								var_list[i].ptr_depth = 0;
@@ -290,6 +296,50 @@ VAR_LIST2 : VAR EQ A_EXPN {
 				strcat(temp_string,"[");strcat(temp_string,"200");strcat(temp_string,"]");
 				strcat(temp_string,"=");strcat(temp_string,$3);
 				strcpy($$,temp_string);strcpy(temp_string,"");
+			}
+			| VAR EQ ARRAY_INIT {
+				strcpy(var_list[var_list_ind].var_name,$1);
+				var_list[var_list_ind].LHS_type = $3.type+1;
+				var_list[var_list_ind].is_Array = 1;
+				//var_list[var_list_ind].dims=$3.dims;
+				//var_list[var_list_ind].dim_bounds=$3.dims;
+				var_list_ind++;
+			}
+ARRAY_INIT : LSQRB ARRAY_INIT2 RSQRB {
+				$$.type=$2.type;
+				$$.data_depth=$2.data_depth;
+				//$$.dims=$2.dims;
+				//$$.dim_bounds=$2.dim_bounds;
+			}
+ARRAY_INIT2 : ARRAY_INIT2 COMA ARRAY_INIT2 {
+				if($1.type!=$3.type || $1.data_depth!=$3.data_depth){
+					yyerror("Type mismatch in array elements.");exit(0);
+				}				
+				$$.data_depth=$1.data_depth;
+				$$.type=$1.type;
+			/*}
+			| LSQRB ARRAY_INIT2 RSQRB {
+				$$.type=$2.type;
+				//var_list[var_list_ind].dims++; //takes dims+1 in insert function
+				$$.data_depth=$2.data_depth; //For 2d Arrays*/
+			}
+			| A_EXPN {
+				var_list[var_list_ind].array_dim[0]++;
+				$$.type=$1.type;
+				$$.data_depth=$1.data_depth;
+				var_list[var_list_ind].dims=0;
+			}
+			| Q_STRING {
+				//dims=strlen($1);
+				//printf("%d",dims);
+				if(string_len($1)>var_list[var_list_ind].array_dim[1]){
+					printf("yes");
+					var_list[var_list_ind].array_dim[1] = string_len($1);
+				}
+				var_list[var_list_ind].array_dim[0]++;
+				$$.type=1;
+				$$.data_depth = 1;
+				var_list[var_list_ind].dims=1;
 			}
 PTR_VAR :	PTR_DEPTH VAR {
 				//printf("<PTR_DEPTH VAR>");
@@ -993,6 +1043,14 @@ void format_string(char str[200]){
 			i++;
 		}
 	}
+}
+int string_len(char str[200]){
+    int len =0;
+    while(str[len]!='\0'){
+		printf("%c",str[len]);
+        len++;
+    }
+    return len;
 }
 void check_ind(int current_ind){
 	if(current_ind < pointer->ind_level){
