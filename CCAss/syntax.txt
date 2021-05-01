@@ -2,7 +2,7 @@ if(logical_expression):
     /*
     body
     */
-else if(logical_expression):
+elif(logical_expression):
     /*
     body
     */
@@ -11,7 +11,7 @@ else:
     body
     */
 
-and or not
+and or
 
 switch(var):
     case x: #var==x
@@ -30,13 +30,13 @@ switch(var):
 
 [\t] {return TAB;} 
 
-for(i::int = 0; logical_expression; i++):
+for(set i::int = 0, logical_expression, i++):
     /*
     body
     */
 
-i::int = 0
-for(i; logical_expression; i++):
+set i::int = 0
+for(i, logical_expression, i++):
     /*
     body
     */
@@ -47,7 +47,7 @@ do:
     */
 while(logical_expression)
 
-while(logical_expression):
+loop(logical_expression):
     /*
     body
     */
@@ -71,38 +71,31 @@ input("Enter a var:")
 int
 float 
 double
-String
+String /*NOPE*/
 char
 
 int a,b,c,d;
-a,b,c,d::int
+set a,b,c,d::int
 
 int a=1,b=2,c=3,d=4;
-a,b,c,d::int = 1,2,3,4
-
-LOL: VAR COMA LOL | VAR
-DEC : LOL COL COL DATA_TYPE |  
-
+set a=1,b=2,c=3,d=4::int
+  
+Comments:
 //
 /* */
 
-array[]::int = {}
-
-class A:
-class B,A: #B inherits from A
+set array=[1,2,3,4,5]::int
+set string="hello world"::char
 
 int@func(a::int, b::int):
-
-FUNC_CALL : DATA_TYPE AT FUNC_NAME LB PARA RB COL
-PARA: VAR COL COL DATA_TYPE COMA PARA | VAR COL COL DATA_TYPE
- 
 func(10,20)
 
 
-num::int = 4
-str::String = "string"
-str = "string"
+set num::int = 4
+set str::String = "string"
+set str = "string"
 
 Input and Output:
-scan
-print
+read()
+print()
+println()
