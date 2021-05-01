@@ -3,7 +3,7 @@ import stdio.h
 int @ main():
     set a=2,b=3,array[20]::int
     set str[30],name="Gokul",charr='!'::char
-    read("%s",str)
+    input(str)
     println("Hello %s%c",name,charr)
     println()
     println("Hi %s%c",str,charr)
