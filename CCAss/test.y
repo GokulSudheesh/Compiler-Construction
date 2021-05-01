@@ -16,6 +16,7 @@
 	int array_format_spec[20];
 	int format_spec_counter=0;
 	int RWmode; // 1 -> read mode, 2 -> write mode
+	int isDOwhile = 0; //boolean to check if the current loop is a do while loop
 	int dims;
 	char temp_string[100];
 	char temp_string2[100];
@@ -79,7 +80,7 @@
 		}EXPN_type;
 }
 %token HASH IMPORT AT SET VOID RETURN TAB LB RB LCB RCB LSQRB RSQRB SC COLON QMARK COMA IF ELSE_IF ELSE FOR DO 
-%token WHILE IN PRINT PRINTLN INPUT SCANF ET EQ IS GT LT GTE LTE NE ISNOT AMPER AND OR NOT DQUOTE PLUS MINUS MUL DIV 
+%token UNTIL WHILE IN PRINT PRINTLN INPUT SCANF ET EQ IS GT LT GTE LTE NE ISNOT AMPER AND OR NOT DQUOTE PLUS MINUS MUL DIV 
 %token MOD EXP UPLUS UMINUS
 
 %left PLUS MINUS
@@ -205,7 +206,15 @@ FUNC_DEC : VAR {
 //MAIN_FUNC_BODY : DATA_TYPE AT MAIN LB RB COLON {push_table(1);} BODY {pop_table();}
 
 //BODY	: INDENTATION {/*printf("Level %d\n", $1);*/check_ind($1);} DECLARATION_STATEMENTS {printf("%s;\n",$3);} BODY2
-BODY2	: /*Epsilon*/ | INDENTATION {/*printf("Level %d\n", $1);*/check_ind($1);} DECLARATION_STATEMENTS {printf("%s;\n",$3);} BODY2 | INDENTATION {/*printf("Level %d\n", $1);*/check_ind($1);} PROGRAM_STATEMENTS BODY2
+BODY2	: /*Epsilon*/ | INDENTATION {/*printf("Level %d\n", $1);*/check_ind($1);} DECLARATION_STATEMENTS {printf("%s;\n",$3);} BODY2 | INDENTATION {/*printf("Level %d\n", $1);*/check_ind($1);} PROGRAM_STATEMENTS BODY2 
+		|INDENTATION {
+			if($1==pointer->prev->ind_level){
+				check_ind($1);
+			}
+			else{
+				yyerror("Indentation Error.");exit(0);
+			}
+		} OTHER_STATEMENTS BODY2
 
 DECLARATION_STATEMENTS: SET VAR_LIST COLON COLON DATA_TYPE{
 						
@@ -397,7 +406,7 @@ PROGRAM_STATEMENTS :	ASSIGNMENT_STATEMENT {printf("%s;\n",$1);}
 				| FUNC_CALL {printf("%s;\n",$1);}
 				| CONDITIONAL_STATEMENTS
 				| WHILE LB LOGICAL_EXPN RB COLON {printf("while(%s)",$3);push_table(1);} BODY2 //RCB {pop_table();}
-				| DO LB LOGICAL_EXPN RB COLON BODY2
+				| DO COLON {isDOwhile=1;printf("do");push_table(1);} BODY2 {if(isDOwhile){yyerror("Missing until statement.");exit(0);}}
 				| FOR VAR IN A_EXPN COLON {
 					if($4.data_depth!=1){
 						yyerror("Array of 1 dimension required for the iterator.");exit(0);
@@ -412,6 +421,16 @@ PROGRAM_STATEMENTS :	ASSIGNMENT_STATEMENT {printf("%s;\n",$1);}
 				| FOR LB ASSIGNMENT_STATEMENT COMA LOGICAL_EXPN COMA INCR_DCR_EXPN RB COLON {printf("for(%s; %s; %s)",$3,$5,$7.code);push_table(1);} BODY2 //RCB {pop_table();}
 				| FOR LB {push_table(0);} DECLARATION_STATEMENTS COMA LOGICAL_EXPN COMA INCR_DCR_EXPN RB COLON {printf("for(%s; %s; %s){\n",$4,$6,$8.code);} BODY2
 				| {/*Epsilon*/}
+OTHER_STATEMENTS : UNTIL LB LOGICAL_EXPN RB {
+					//Other statements follows different indentation logic
+					if(isDOwhile){
+						printf("while(%s);\n",$3);
+						isDOwhile = 0;
+					}
+					else{
+						yyerror("Syntax error.");exit(0);
+					}
+				}
 
 FUNC_CALL : VAR LB {func_column = func_lookup($1);} FUNC_ARG RB {
 				if(args!=-1){
