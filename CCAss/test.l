@@ -17,7 +17,7 @@
 "else"	{return ELSE;}
 "for"	{return FOR;}
 "do"	{return DO;}
-"while"	{return WHILE;}
+"loop"	{return WHILE;}
 "in" {return IN;}
 "@" {return AT;}
 "set" {return SET;}
