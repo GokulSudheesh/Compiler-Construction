@@ -80,7 +80,7 @@
 		}EXPN_type;
 }
 %token HASH IMPORT AT SET VOID RETURN TAB LB RB LCB RCB LSQRB RSQRB SC COLON QMARK COMA IF ELSE_IF ELSE FOR DO 
-%token UNTIL WHILE IN PRINT PRINTLN INPUT SCANF ET EQ IS GT LT GTE LTE NE ISNOT AMPER AND OR NOT DQUOTE PLUS MINUS MUL DIV 
+%token UNTIL WHILE IN PRINT PRINTLN INPUT SCANF ET EQ AS IS GT LT GTE LTE NE ISNOT AMPER AND OR NOT DQUOTE PLUS MINUS MUL DIV 
 %token MOD EXP UPLUS UMINUS
 
 %left PLUS MINUS
@@ -91,6 +91,7 @@
 %right AMPER
 %token<data_type>INT
 %token<data_type>CHAR
+%token<data_type>STRING
 %token<data_type>FLOAT
 %token<data_type>DOUBLE
 %token<var_name>VAR
@@ -109,6 +110,8 @@
 %type<data_type>FUNC_BODY
 %type<code>DECLARATION_STATEMENTS
 %type<code>VAR_LIST
+%type<EXPN_type>ARRAY_INIT
+%type<EXPN_type>ARRAY_INIT2
 %type<code>UNARY_OPERATORS
 %type<code>OPR_PREC1
 %type<code>OPR_PREC2
@@ -236,6 +239,9 @@ DECLARATION_STATEMENTS: SET VAR_LIST COLON COLON DATA_TYPE{
 							if (var_list[i].is_Array){
 								var_list[i].is_Array = 0;
 								var_list[i].dims = 0;
+								for(int j = 0; j < 5; j++){
+									var_list[i].array_dim[j]=0;
+								}
 							}
 							if (var_list[i].ptr_depth > 0){
 								var_list[i].ptr_depth = 0;
@@ -280,7 +286,7 @@ VAR_LIST : VAR COMA VAR_LIST {
 	| ARRAY_DECLARATION {strcpy($$,$1);}
 	| PTR_VAR {strcpy($$,$1);}
 	| VAR_LIST2 {strcpy($$,$1);}
-VAR_LIST2 : VAR EQ A_EXPN {
+VAR_LIST2 : VAR ASS A_EXPN {
 				if ($3.data_depth!=0){
 					yyerror("Incompatible pointer type in assignment");
 					exit(0);
@@ -295,7 +301,7 @@ VAR_LIST2 : VAR EQ A_EXPN {
 				strcpy($$,temp_string);
 				strcpy(temp_string,"");
 			}
-			| VAR EQ Q_STRING {
+			| VAR ASS Q_STRING {
 				strcpy(var_list[var_list_ind].var_name,$1);
 				var_list[var_list_ind].LHS_type = 2;
 				var_list[var_list_ind].is_Array = 1;
@@ -309,13 +315,71 @@ VAR_LIST2 : VAR EQ A_EXPN {
 				strcat(temp_string,"=");strcat(temp_string,$3);
 				strcpy($$,temp_string);strcpy(temp_string,"");
 			}
-			| VAR EQ Q_CHAR {
+			| VAR ASS Q_CHAR {
 				strcpy(var_list[var_list_ind].var_name,$1);
 				var_list[var_list_ind].LHS_type = 2;
 				var_list_ind++;
 				strcpy(temp_string,$1);
 				strcat(temp_string,"=");strcat(temp_string,$3);
 				strcpy($$,temp_string);strcpy(temp_string,"");
+			}
+			| VAR ASS ARRAY_INIT {
+				strcpy(var_list[var_list_ind].var_name,$1);
+				var_list[var_list_ind].LHS_type = $3.type+1;
+				var_list[var_list_ind].is_Array = 1;
+				strcpy(temp_string,$1);
+				for(int i = 0; i < 5;i++){
+					if(var_list[var_list_ind].array_dim[i]!=0){
+						strcat(temp_string,"[");
+						sprintf(temp_string2, "%d", var_list[var_list_ind].array_dim[i]);
+						strcat(temp_string,temp_string2);
+						strcat(temp_string,"]");
+					}					
+				}
+				strcat(temp_string,"=");
+				strcat(temp_string,$3.code);
+				strcpy($$,temp_string);strcpy(temp_string,"");
+				var_list_ind++;
+			}
+ARRAY_INIT : LSQRB ARRAY_INIT2 RSQRB {
+				$$.type=$2.type;
+				$$.data_depth=$2.data_depth;
+				strcpy(temp_string,"{");strcat(temp_string,$2.code);
+				strcat(temp_string,"}");strcpy($$.code,temp_string);strcpy(temp_string,"");
+			}
+ARRAY_INIT2 : ARRAY_INIT2 COMA ARRAY_INIT2 {
+				if($1.type!=$3.type || $1.data_depth!=$3.data_depth){
+					yyerror("Type mismatch in array elements.");exit(0);
+				}				
+				$$.data_depth=$1.data_depth;
+				$$.type=$1.type;
+				strcpy(temp_string,$1.code);strcat(temp_string,",");
+				strcat(temp_string,$3.code);strcpy($$.code,temp_string);
+				strcpy(temp_string,"");
+			}
+			| A_EXPN {
+				var_list[var_list_ind].array_dim[0]++;
+				$$.type=$1.type;
+				$$.data_depth=$1.data_depth;
+				var_list[var_list_ind].dims=0; //takes dims+1 in insert function
+				strcpy($$.code,$1.code);
+			}
+			| Q_STRING {
+				if(string_len($1)>var_list[var_list_ind].array_dim[1]){
+					var_list[var_list_ind].array_dim[1] = string_len($1);
+				}
+				var_list[var_list_ind].array_dim[0]++;
+				$$.type=1;
+				$$.data_depth = 1;
+				var_list[var_list_ind].dims=1;
+				strcpy($$.code,$1);
+			}
+			| Q_CHAR {
+				var_list[var_list_ind].array_dim[0]++;
+				$$.type=1;
+				$$.data_depth=0;
+				var_list[var_list_ind].dims=0;
+				strcpy($$.code,$1);
 			}
 PTR_VAR :	PTR_DEPTH VAR {
 				//printf("<PTR_DEPTH VAR>");
@@ -392,6 +456,11 @@ DATA_TYPE : INT {
 			strcpy($$.code,"double");
 			current_data_type=$1;
 		}
+	| STRING {
+		$$.type=$1;
+		strcpy($$.code,"char");
+		current_data_type=$1;
+	}
 	| VOID {
 		$$.type=-1;
 		strcpy($$.code,"void");
@@ -929,6 +998,7 @@ OPR_PREC2: DIV {strcpy($$, "/");}
 		| MUL {strcpy($$, "*");} 
 		| EXP {strcpy($$, "^");} 
 		| MOD {strcpy($$, "%"); is_modulus = 1;}
+ASS : AS | EQ
 
 INDENTATION : TAB {/*printf("<TAB>");*/$$ = 1;} | INDENTATION TAB {/*printf("<INDENTATION TAB>");*/$$++;}
 

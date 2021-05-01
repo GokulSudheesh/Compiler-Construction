@@ -24,6 +24,7 @@
 "set" {return SET;}
 "void" {return VOID;}
 "int"	{yylval.data_type=0;return INT;}
+"string" {yylval.data_type=1;return STRING;}
 "char" {yylval.data_type=1; return CHAR;}
 "float" {yylval.data_type=2; return FLOAT;}
 "double" {yylval.data_type=3; return DOUBLE;}
@@ -54,6 +55,7 @@
 "==" {return ET;}
 "is" {return IS;}
 "="	{return EQ;}
+"as" {return AS;}
 ">" {return GT;}
 "<" {return LT;}
 ">=" {return GTE;}
