@@ -4,7 +4,7 @@ int@funcname1(para1::int,para2::float,para3::char,para4[1][2][3]::int):
     print("Hi")
     set lol::int
     set lol2::float
-    for(lol = 0; lol < 3; lol++):
+    for(lol = 0, lol < 3, lol++):
         print("Hi")
         set loop1::int 
     return lol
@@ -30,9 +30,9 @@ int @ main():
     funcname2(arr)
     set **c::int//hi
     set array2[20][30][40],a4::char
-    for(set hmm=1::int;hmm<2;hmm++):
+    for(set hmm=1::int,hmm<2,hmm++):
         set d::int
         set **k::char
-        if(d<k):
-        if(b>=1):
+        if(d<10):
+        if(b>=2.0):
     print("Hello %s", array2[a][a])
