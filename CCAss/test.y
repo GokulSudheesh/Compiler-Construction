@@ -16,6 +16,7 @@
 	int array_format_spec[20];
 	int format_spec_counter=0;
 	int RWmode; // 1 -> read mode, 2 -> write mode
+	int isScanf=0; //1->scanf, 0->input (two types of input statements)
 	int isDOwhile = 0; //boolean to check if the current loop is a do while loop
 	int dims;
 	char temp_string[100];
@@ -78,6 +79,10 @@
 			int isValue;
 			char code[100];
 		}EXPN_type;
+	struct{
+		char code1[100];
+		char code2[100];
+	}i_o;
 }
 %token HASH IMPORT AT SET VOID RETURN TAB LB RB LCB RCB LSQRB RSQRB SC COLON QMARK COMA IF ELSE_IF ELSE FOR DO 
 %token UNTIL WHILE IN PRINT PRINTLN INPUT SCANF ET EQ AS IS GT LT GTE LTE NE ISNOT AMPER AND OR NOT DQUOTE PLUS MINUS MUL DIV 
@@ -130,7 +135,7 @@
 %type<code>COMP_OPERATOR
 %type<code>LOGICAL_OPERATOR
 %type<code>VAR_LIST_OP
-%type<code>VAR_LIST_IP
+%type<i_o>VAR_LIST_IP
 
 %start prm
 
@@ -306,6 +311,7 @@ VAR_LIST2 : VAR ASS A_EXPN {
 				var_list[var_list_ind].LHS_type = 2;
 				var_list[var_list_ind].is_Array = 1;
 				var_list[var_list_ind].dims=0;
+				var_list[var_list_ind].array_dim[0]=string_len($3);
 				var_list_ind++;
 				strcpy(temp_string,$1);
 				strcat(temp_string,"[");
@@ -583,28 +589,74 @@ VAR_LIST_OP : A_EXPN COMA VAR_LIST_OP {
 				strcpy($$,$1.code);		
 			}
 
-READ_STATEMENT : SCANF LB Q_STRING {RWmode = 1; format_string($3);} COMA VAR_LIST_IP RB{printf("scanf(%s,%s);\n",$3,$6);RWmode = 0;}
+READ_STATEMENT : SCANF LB Q_STRING {RWmode = 1; isScanf=1;format_string($3);} COMA VAR_LIST_IP RB{printf("scanf(%s,%s);\n",$3,$6.code1);RWmode = 0;}
+				| INPUT LB {RWmode=1;isScanf=0;} VAR_LIST_IP RB {printf("scanf(\"%s\",%s);\n",$4.code2,$4.code1);RWmode=0;}
 VAR_LIST_IP : A_EXPN COMA VAR_LIST_IP {
 				//printf("<A_EXPN COMA VAR_LIST_IP>");
-				if (array_format_spec[--format_spec_counter] != $1.type){
-					yyerror("Type mismatch in arguments."); exit(0);
-				}
-				else if ($1.data_depth != 1){
-					yyerror("Error in reference depth."); exit(0);
+				if(isScanf){
+					if (array_format_spec[--format_spec_counter] != $1.type){
+						yyerror("Type mismatch in arguments."); exit(0);
+					}
+					if ($1.data_depth != 1){
+						yyerror("Error in reference depth."); exit(0);
+					}	
+					strcpy(temp_string,$1.code);strcat(temp_string,",");
+					strcat(temp_string,$3.code1);strcpy($$.code1,temp_string);
+					strcpy(temp_string,"");	
 				}	
-				strcpy(temp_string,$1.code);strcat(temp_string,",");
-				strcat(temp_string,$3);strcpy($$,temp_string);
-				strcpy(temp_string,"");	
+				else{
+					if ($1.data_depth > 1){
+						yyerror("Error in reference depth."); exit(0);
+					}
+					strcpy(temp_string,"");
+					strcpy(temp_string2,"");
+					if ($1.data_depth == 0){
+						strcat(temp_string,"&");
+						strcat(temp_string,$1.code);
+						strcat(temp_string,",");
+						strcat(temp_string2,format_spec[$1.type]);						
+					}
+					else{
+						if($1.type==1){
+							strcat(temp_string,$1.code);
+							strcat(temp_string,",");
+							strcat(temp_string2,"%s");
+						}
+					}
+					strcat(temp_string,$3.code1);strcpy($$.code1,temp_string);
+					strcat(temp_string2,$3.code2);strcpy($$.code2,temp_string2);
+					strcpy(temp_string,"");strcpy(temp_string2,"");
+				}				
 			}
 			| A_EXPN {
 				//printf("<A_EXPN>");
-				if (array_format_spec[--format_spec_counter] != $1.type){
-					yyerror("Type mismatch in arguments."); exit(0);
+				if(isScanf){
+					if (array_format_spec[--format_spec_counter] != $1.type){
+						yyerror("Type mismatch in arguments."); exit(0);
+					}
+					if ($1.data_depth != 1){
+						yyerror("Error in reference depth."); exit(0);
+					}
+					strcpy($$.code1,$1.code);	
 				}
-				else if ($1.data_depth != 1){
-					yyerror("Error in reference depth."); exit(0);
+				else{
+					if ($1.data_depth > 1){
+						yyerror("Error in reference depth."); exit(0);
+					}
+					strcpy(temp_string,"");
+					if ($1.data_depth == 0){
+						strcat(temp_string,"&");
+						strcpy($$.code2,format_spec[$1.type]);
+						strcat(temp_string,$1.code);						
+					}
+					else{
+						if($1.type==1){
+							strcpy($$.code2,"%s");
+							strcat(temp_string,$1.code);
+						}
+					}					
+					strcpy($$.code1,temp_string);strcpy(temp_string,"");					
 				}
-				strcpy($$,$1.code);				
 			}
 
 CONDITIONAL_STATEMENTS : IF_STATEMENT | IF_STATEMENT ELSE_STATEMENT | IF_STATEMENT ELSE_IF_STATEMENT | IF_STATEMENT ELSE_IF_STATEMENT ELSE_STATEMENT

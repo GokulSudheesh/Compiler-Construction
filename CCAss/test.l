@@ -32,7 +32,7 @@
 "print" {return PRINT;}
 "println" {return PRINTLN;}
 "input" {return INPUT;}
-"read" {return SCANF;}
+"scanf" {return SCANF;}
 "#" {return HASH;}
 "("	{return LB;}
 ")"	{return RB;}
