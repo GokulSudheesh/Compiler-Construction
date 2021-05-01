@@ -29,6 +29,7 @@
 "return" {return RETURN;}
 "print" {return PRINT;}
 "println" {return PRINTLN;}
+"input" {return INPUT;}
 "read" {return SCANF;}
 "#" {return HASH;}
 "("	{return LB;}

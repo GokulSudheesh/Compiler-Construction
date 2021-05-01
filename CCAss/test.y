@@ -10,6 +10,7 @@
 	int success = 0;
 	int isGlobal = 0;//boolean to check if the program contains global declarations
 	char data_types [][30] = {"int","char","float","double"};
+	char format_spec [][30] = {"%d","%c","%f","%lf","%s"};
 	int current_data_type;
 	int is_modulus = 0;
 	int array_format_spec[20];
@@ -78,7 +79,7 @@
 		}EXPN_type;
 }
 %token HASH IMPORT AT SET VOID RETURN TAB LB RB LCB RCB LSQRB RSQRB SC COLON QMARK COMA IF ELSE_IF ELSE FOR DO 
-%token WHILE IN PRINT PRINTLN SCANF ET EQ IS GT LT GTE LTE NE ISNOT AMPER AND OR NOT DQUOTE PLUS MINUS MUL DIV 
+%token WHILE IN PRINT PRINTLN INPUT SCANF ET EQ IS GT LT GTE LTE NE ISNOT AMPER AND OR NOT DQUOTE PLUS MINUS MUL DIV 
 %token MOD EXP UPLUS UMINUS
 
 %left PLUS MINUS
@@ -561,6 +562,25 @@ ASSIGNMENT_STATEMENT : A_EXPN EQ A_EXPN
 					strcat(temp_string,$3.code);
 					strcpy($$, temp_string);
 					strcpy(temp_string,"");
+				}
+				| A_EXPN EQ INPUT LB Q_STRING RB{
+					if($1.data_depth>1 || $1.isValue==1){
+						yyerror("Error in variable reference");exit(0);
+					}
+					print_tabs(1);printf("printf(\"\\n\");");
+					printf("printf(%s);\n",$5);
+					if($1.data_depth==0){						
+						strcpy(temp_string,"scanf(\"");strcat(temp_string,format_spec[$1.type]);
+						strcat(temp_string,"\"");strcat(temp_string,",");strcat(temp_string,"&");
+						strcat(temp_string,$1.code);strcat(temp_string,")");strcpy($$,temp_string);
+						strcpy(temp_string,"");
+					}
+					if($1.data_depth==1 || $1.type==1){						
+						strcpy(temp_string,"scanf(\"");strcat(temp_string,format_spec[4]);
+						strcat(temp_string,"\"");strcat(temp_string,",");
+						strcat(temp_string,$1.code);strcat(temp_string,")");strcpy($$,temp_string);
+						strcpy(temp_string,"");
+					}
 				}
 
 LOGICAL_EXPN	: NOT LB LOGICAL_EXPN1 RB {strcpy(temp_string,"!");strcat(temp_string,"(");strcat(temp_string,$3);strcat(temp_string,")");strcpy($$,temp_string);strcpy(temp_string,"");}
