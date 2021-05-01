@@ -380,17 +380,19 @@ PROGRAM_STATEMENTS :	ASSIGNMENT_STATEMENT {/*printf("%s;\n",$1);*/}
 				| CONDITIONAL_STATEMENTS
 				| WHILE LB LOGICAL_EXPN RB COLON {/*printf("while(%s)",$3);*/push_table(1);} BODY2 //RCB {pop_table();}
 				| DO LB LOGICAL_EXPN RB COLON BODY2
-				| FOR VAR {push_table(0);insert_to_table($2, 0, var_list[0].is_Array, var_list[0].dims, var_list[0].ptr_depth, var_list[0].array_dim);} IN A_EXPN COLON {
-					if($5.type!=0 || $5.data_depth!=1){
-						yyerror("Integer array of 1 dimension required for the iterator.");exit(0);
+				| FOR VAR IN A_EXPN COLON {
+					if($4.data_depth!=1){
+						yyerror("Array of 1 dimension required for the iterator.");exit(0);
 					}
+					push_table(0);
+					insert_to_table($2, $4.type, var_list[0].is_Array, var_list[0].dims, var_list[0].ptr_depth, var_list[0].array_dim);
 					print_tabs(0);
 					//printf("for(int i = 0; i < sizeof(%s)/sizeof(%s[0]); i++){\n",$5.code,$5.code);
 					print_tabs(1);
 					//printf("int %s = %s[i];\n",$2,$5.code);
 				} BODY2 
-				| FOR LB ASSIGNMENT_STATEMENT SC LOGICAL_EXPN SC INCR_DCR_EXPN RB COLON {/*printf("for(%s; %s; %s)",$3,$5,$7.code);*/push_table(1);} BODY2 //RCB {pop_table();}
-				| FOR LB DECLARATION_STATEMENTS SC LOGICAL_EXPN SC INCR_DCR_EXPN RB COLON {/*printf("for(%s; %s; %s)",$3,$5,$7.code);*/push_table(1);} BODY2
+				| FOR LB ASSIGNMENT_STATEMENT COMA LOGICAL_EXPN COMA INCR_DCR_EXPN RB COLON {/*printf("for(%s; %s; %s)",$3,$5,$7.code);*/push_table(1);} BODY2 //RCB {pop_table();}
+				| FOR LB {push_table(0);} DECLARATION_STATEMENTS COMA LOGICAL_EXPN COMA INCR_DCR_EXPN RB COLON {/*printf("for(%s; %s; %s){\n",$4,$6,$8.code);*/} BODY2
 				| {/*Epsilon*/}
 
 FUNC_CALL : VAR LB {func_column = func_lookup($1);} FUNC_ARG RB {
