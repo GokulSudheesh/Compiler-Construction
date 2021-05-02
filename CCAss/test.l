@@ -19,6 +19,8 @@
 "do"	{return DO;}
 "until" {return UNTIL;}
 "loop"	{return WHILE;}
+"break" {return BREAK;}
+"continue" {return CONTINUE;}
 "in" {return IN;}
 "@" {return AT;}
 "set" {return SET;}
@@ -28,6 +30,7 @@
 "char" {yylval.data_type=1; return CHAR;}
 "float" {yylval.data_type=2; return FLOAT;}
 "double" {yylval.data_type=3; return DOUBLE;}
+"frame" {yylval.data_type=5; return STRUCT;}
 "return" {return RETURN;}
 "print" {return PRINT;}
 "println" {return PRINTLN;}
@@ -67,6 +70,7 @@
 "and" {return AND;}
 "or" {return OR;}
 "!" {return NOT;}
+"." {return DOT;}
 [\"] {return DQUOTE;}
 ([" "]{4})*\/\/(.*) {/*Single line comment*/};
 ([" "]{4})*\/\*(.*\n)*.*\*\/  {/*Regular expression for multi line comment*/};	

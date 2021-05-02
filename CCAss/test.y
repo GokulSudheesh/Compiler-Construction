@@ -28,6 +28,7 @@
     	struct symbol_table var_list[100];
     	int var_count;
 		int ind_level;
+		int isLoop;
     	struct symbol_table_stack * prev;
     	struct symbol_table_stack * next;
 	};
@@ -36,6 +37,8 @@
 
 	struct functions{char func_name[30]; struct fun_type{int type;int data_depth;int isValue;}func_type; int paras; struct paras_table{int type; int data_depth;} para_sym[10];}func_list[100];
 	int func_count = -1; 
+	struct structures{char struct_name[30];}struct_list[100];
+	int struct_count = -1; 
 	struct functions func_column;
 	int args;
 
@@ -54,6 +57,9 @@
 	extern void check_ind(int current_ind);
 	struct functions func_lookup(char var[30]);
 	void check_func(char str[30]);
+	int insideInnerLoop();
+	int struct_lookup(char var[30]);
+	int check_char(char str[30], char c);
 	extern void print_tabs(int mode);//0 -> prev ind level | 1 -> current ind level
 %}
 
@@ -87,7 +93,7 @@
 }
 %token HASH IMPORT AT SET VOID RETURN TAB LB RB LCB RCB LSQRB RSQRB SC COLON QMARK COMA IF ELSE_IF ELSE FOR DO 
 %token UNTIL WHILE IN PRINT PRINTLN WRITE INPUT SCANF ET EQ AS IS GT LT GTE LTE NE ISNOT AMPER AND OR NOT DQUOTE PLUS MINUS MUL DIV 
-%token MOD EXP UPLUS UMINUS
+%token BREAK CONTINUE DOT MOD EXP UPLUS UMINUS
 
 %left PLUS MINUS
 %left MUL DIV MOD
@@ -100,6 +106,7 @@
 %token<data_type>STRING
 %token<data_type>FLOAT
 %token<data_type>DOUBLE
+%token<data_type>STRUCT
 %token<var_name>VAR
 %token<Number>INT_NUMBER
 %token<Number>FLOAT_NUMBER
@@ -154,7 +161,22 @@ prm	: HEADERS {push_global();pointer=global;} GLOBAL_STATEMENTS {
 		success=1;
 	}
 GLOBAL_STATEMENTS : DECLARATION_STATEMENTS {isGlobal=1;	printf("%s;\n",$1);} GLOBAL_STATEMENTS
+					| STRUCTURES {isGlobal=1;} GLOBAL_STATEMENTS
 					| {/*Epsilon*/}
+
+STRUCTURES : STRUCT VAR COLON {printf("struct %s{\n",$2);} STRUCT_BODY GT {struct_count++;strcpy(struct_list[struct_count].struct_name,$2);printf("};\n");}
+STRUCT_BODY : DECLARATION_STATEMENTS {
+				if(check_char($1,'=')){
+					yyerror("Invalid operator \'=\' in frames.");exit(0);
+				}
+				printf("%s;\n",$1);
+			}  STRUCT_BODY 
+			| DECLARATION_STATEMENTS {
+				if(check_char($1,'=')){
+					yyerror("Invalid operator \'=\' in frames.");exit(0);
+				}
+				printf("%s;\n",$1);
+			} 
 HEADERS : HEADER HEADERS | HEADER
 HEADER	: IMPORT HEADER_FILE {printf("#include <%s>\n",$2);}| IMPORT Q_STRING {format_string($2);printf("#include %s\n",$2);}
 
@@ -262,6 +284,17 @@ DECLARATION_STATEMENTS: SET VAR_LIST COLON COLON DATA_TYPE{
 						strcat(temp_string,$2);
 						strcpy($$, temp_string);
 						strcpy(temp_string, "");
+					}
+					| SET AT VAR VAR DATA_TYPE{
+						if($5.type!=5){
+							yyerror("You mean frame?");exit(0);
+						}
+						struct_lookup($4);// 4th child holds the structure name
+						insert_to_table($3, $5.type, var_list[0].is_Array, var_list[0].dims, var_list[0].ptr_depth, var_list[0].array_dim);	
+						strcpy(temp_string,$5.code);
+						strcat(temp_string," ");strcat(temp_string,$4);
+						strcat(temp_string," ");strcat(temp_string,$3);
+						strcpy($$,temp_string);strcpy(temp_string,"");
 					} 
 VAR_LIST : VAR COMA VAR_LIST {
 				strcpy(var_list[var_list_ind].var_name,$1);
@@ -477,6 +510,11 @@ DATA_TYPE : INT {
 		strcpy($$.code,"void");
 		current_data_type=-1;
 	}
+	| STRUCT {
+		$$.type=$1;
+		strcpy($$.code,"struct");
+		current_data_type=$1;
+	}
  
 PROGRAM_STATEMENTS :	ASSIGNMENT_STATEMENT {printf("%s;\n",$1);}
 				| ASSIGNMENT_STATEMENT_CHARS {printf("%s;\n",$1);}
@@ -485,8 +523,8 @@ PROGRAM_STATEMENTS :	ASSIGNMENT_STATEMENT {printf("%s;\n",$1);}
 				| INCR_DCR_EXPN {printf("%s;\n",$1.code);}
 				| FUNC_CALL {printf("%s;\n",$1);}
 				| CONDITIONAL_STATEMENTS
-				| WHILE LB LOGICAL_EXPN RB COLON {printf("while(%s)",$3);push_table(1);} BODY2 //RCB {pop_table();}
-				| DO COLON {isDOwhile=1;printf("do");push_table(1);} BODY2 {if(isDOwhile){yyerror("Missing until statement.");exit(0);}}
+				| WHILE LB LOGICAL_EXPN RB COLON {printf("while(%s)",$3);push_table(1);pointer->isLoop=1;} BODY2 //RCB {pop_table();}
+				| DO COLON {isDOwhile++;printf("do");push_table(1);pointer->isLoop=1;} BODY2 {if(isDOwhile>0){printf("\nMissing until statement.\n");exit(0);}}
 				| FOR VAR IN A_EXPN COLON {
 					if($4.data_depth==2 && $4.type!=1){
 						yyerror("Iterator requires a string array.");exit(0);
@@ -498,7 +536,7 @@ PROGRAM_STATEMENTS :	ASSIGNMENT_STATEMENT {printf("%s;\n",$1);}
 						yyerror("Iterator requires an array.");exit(0);
 					}
 					push_table(0);
-					
+					pointer->isLoop=1;
 					print_tabs(0);
 					printf("for(int i = 0; i < sizeof(%s)/sizeof(%s[0]); i++){\n",$4.code,$4.code);
 					print_tabs(1);
@@ -518,14 +556,26 @@ PROGRAM_STATEMENTS :	ASSIGNMENT_STATEMENT {printf("%s;\n",$1);}
 						printf("%s %s = %s[i];\n",data_types[$4.type],$2,$4.code);
 					}					
 				} BODY2 
-				| FOR LB ASSIGNMENT_STATEMENT COMA LOGICAL_EXPN COMA INCR_DCR_EXPN RB COLON {printf("for(%s; %s; %s)",$3,$5,$7.code);push_table(1);} BODY2 //RCB {pop_table();}
-				| FOR LB {push_table(0);} DECLARATION_STATEMENTS COMA LOGICAL_EXPN COMA INCR_DCR_EXPN RB COLON {printf("for(%s; %s; %s){\n",$4,$6,$8.code);} BODY2
+				| FOR LB ASSIGNMENT_STATEMENT COMA LOGICAL_EXPN COMA INCR_DCR_EXPN RB COLON {printf("for(%s; %s; %s)",$3,$5,$7.code);push_table(1);pointer->isLoop=1;} BODY2 //RCB {pop_table();}
+				| FOR LB {push_table(0);pointer->isLoop=1;} DECLARATION_STATEMENTS COMA LOGICAL_EXPN COMA INCR_DCR_EXPN RB COLON {printf("for(%s; %s; %s){\n",$4,$6,$8.code);} BODY2
+				| BREAK {
+					if(insideInnerLoop()!=1){
+						yyerror("Break statement must be inside a loop.");exit(0);
+					}	
+					printf("break;\n");				
+				}
+				| CONTINUE {
+					if(insideInnerLoop()!=1){
+						yyerror("Continue statement must be inside a loop.");exit(0);
+					}
+					printf("continue;\n");
+				}
 				| {/*Epsilon*/}
 OTHER_STATEMENTS : UNTIL LB LOGICAL_EXPN RB {
 					//Other statements follows different indentation logic
-					if(isDOwhile){
+					if(isDOwhile>0){
 						printf("while(%s);\n",$3);
-						isDOwhile = 0;
+						isDOwhile--;
 					}
 					else{
 						yyerror("Syntax error.");exit(0);
@@ -982,6 +1032,20 @@ A_EXPN	: A_EXPN OPR_PREC1 A_EXPN
 			strcpy($$.var_name, $1);
 			strcpy($$.code, $1);
 		}
+		| AT VAR DOT A_EXPN {//Structures
+			if($4.isValue==1){
+				yyerror("Error in referencing frames.");exit(0);
+			}
+			struct symbol_table column = get_column($2);
+			$$.type = $4.type;
+			$$.data_depth = $4.data_depth;
+			$$.isValue = 0;
+			strcpy(temp_string,$2);strcat(temp_string,".");
+			strcat(temp_string,$4.code);
+			strcpy($$.var_name, temp_string);
+			strcpy($$.code, temp_string);
+			strcpy(temp_string,"");
+		}
 		| FUNC_CALL {
 			$$.type = func_column.func_type.type;//Return types
 			$$.data_depth = func_column.func_type.data_depth;
@@ -1368,6 +1432,37 @@ void check_func(char str[30]){
 			yyerror("Function already exists.");exit(0);
 		}
 	}
+}
+int struct_lookup(char str[30]){
+	for (int i = 0; i <= struct_count; i++){
+		if(strcmp(str, struct_list[i].struct_name)==0){
+			return 1;
+		}
+	}
+	printf("Parsing Failed\nLine Number: %d Structure: %s is not defined.\n",yylineno, str);
+	exit(0);
+	return 0;
+}
+int check_char(char str[30], char c){
+    int i = 0;
+    while(str[i]!='\0'){
+        if(str[i]==c){
+            return 1;
+        }
+        i++;
+    }
+    i = 0;
+    return 0;
+}
+int insideInnerLoop(){
+	struct symbol_table_stack * current = pointer;
+    while(current != NULL){
+		if(current->isLoop==1){
+			return 1;
+		}
+		current=current->prev;
+	}
+	return 0;
 }
 void print_tabs(int mode){
 	int indd;
