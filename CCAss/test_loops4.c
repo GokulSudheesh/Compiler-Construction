@@ -12,6 +12,9 @@ int@main():
     do:
         set lol3::int
         b++
+        do:
+            lol3++
+        until(lol3<3)
     until(b<2)
     println("Done")
     set new_var=0::int

@@ -12,6 +12,7 @@ int@func1():
 int@main():
     set b,c::int
     for(set i=0::int,i<b,i++):
+        break
         set var2,arr2[10],g2=1::int
         print("%d",i)
     loop(c<10):
