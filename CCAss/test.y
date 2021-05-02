@@ -50,6 +50,7 @@
 	extern void display_function_table();
 	extern void format_string(char str[200]);
 	int string_len(char str[200]);
+	void unquote_string(char str[100]);//stores in temp_string
 	extern void check_ind(int current_ind);
 	struct functions func_lookup(char var[30]);
 	void check_func(char str[30]);
@@ -85,7 +86,7 @@
 	}i_o;
 }
 %token HASH IMPORT AT SET VOID RETURN TAB LB RB LCB RCB LSQRB RSQRB SC COLON QMARK COMA IF ELSE_IF ELSE FOR DO 
-%token UNTIL WHILE IN PRINT PRINTLN INPUT SCANF ET EQ AS IS GT LT GTE LTE NE ISNOT AMPER AND OR NOT DQUOTE PLUS MINUS MUL DIV 
+%token UNTIL WHILE IN PRINT PRINTLN WRITE INPUT SCANF ET EQ AS IS GT LT GTE LTE NE ISNOT AMPER AND OR NOT DQUOTE PLUS MINUS MUL DIV 
 %token MOD EXP UPLUS UMINUS
 
 %left PLUS MINUS
@@ -136,6 +137,7 @@
 %type<code>LOGICAL_OPERATOR
 %type<code>VAR_LIST_OP
 %type<i_o>VAR_LIST_IP
+%type<i_o>VAR_LIST_OP2
 
 %start prm
 
@@ -189,6 +191,9 @@ FUNC_PARAS2 : FUNC_DEC COLON COLON DATA_TYPE {
 					if (var_list[i].is_Array){
 						var_list[i].is_Array = 0;
 						var_list[i].dims = 0;
+						for(int j = 0; j < 5; j++){
+							var_list[i].array_dim[j]=0;
+						}
 					}
 					if (var_list[i].ptr_depth > 0){
 						var_list[i].ptr_depth = 0;
@@ -483,15 +488,35 @@ PROGRAM_STATEMENTS :	ASSIGNMENT_STATEMENT {printf("%s;\n",$1);}
 				| WHILE LB LOGICAL_EXPN RB COLON {printf("while(%s)",$3);push_table(1);} BODY2 //RCB {pop_table();}
 				| DO COLON {isDOwhile=1;printf("do");push_table(1);} BODY2 {if(isDOwhile){yyerror("Missing until statement.");exit(0);}}
 				| FOR VAR IN A_EXPN COLON {
-					if($4.data_depth!=1){
+					if($4.data_depth==2 && $4.type!=1){
+						yyerror("Iterator requires a string array.");exit(0);
+					}
+					else if($4.data_depth==0 || $4.data_depth>2){
 						yyerror("Array of 1 dimension required for the iterator.");exit(0);
 					}
+					if($4.isValue){
+						yyerror("Iterator requires an array.");exit(0);
+					}
 					push_table(0);
-					insert_to_table($2, $4.type, var_list[0].is_Array, var_list[0].dims, var_list[0].ptr_depth, var_list[0].array_dim);
+					
 					print_tabs(0);
 					printf("for(int i = 0; i < sizeof(%s)/sizeof(%s[0]); i++){\n",$4.code,$4.code);
 					print_tabs(1);
-					printf("%s %s = %s[i];\n",data_types[$4.type],$2,$4.code);
+					if($4.data_depth==2){
+						struct symbol_table column = get_column($4.code);
+						var_list[0].array_dim[0]=column.dim_bounds[1];
+						insert_to_table($2, $4.type, 1, 0, var_list[0].ptr_depth, var_list[0].array_dim);
+						for (int i = 0; i < 5; i++){
+							var_list[0].array_dim[i]=0;
+						}
+						printf("%s %s[%d];\n",data_types[$4.type],$2,column.dim_bounds[1]);
+						print_tabs(1);
+						printf("strcpy(%s,%s[i]);\n",$2,$4.code);
+					}
+					else{
+						insert_to_table($2, $4.type, var_list[0].is_Array, var_list[0].dims, var_list[0].ptr_depth, var_list[0].array_dim);
+						printf("%s %s = %s[i];\n",data_types[$4.type],$2,$4.code);
+					}					
 				} BODY2 
 				| FOR LB ASSIGNMENT_STATEMENT COMA LOGICAL_EXPN COMA INCR_DCR_EXPN RB COLON {printf("for(%s; %s; %s)",$3,$5,$7.code);push_table(1);} BODY2 //RCB {pop_table();}
 				| FOR LB {push_table(0);} DECLARATION_STATEMENTS COMA LOGICAL_EXPN COMA INCR_DCR_EXPN RB COLON {printf("for(%s; %s; %s){\n",$4,$6,$8.code);} BODY2
@@ -507,7 +532,8 @@ OTHER_STATEMENTS : UNTIL LB LOGICAL_EXPN RB {
 					}
 				}
 
-FUNC_CALL : VAR LB {func_column = func_lookup($1);} FUNC_ARG RB {
+FUNC_CALL : VAR LB {RWmode=1;func_column = func_lookup($1);} FUNC_ARG RB {
+				RWmode=0;//To handle array indexing in A_EXPN
 				if(args!=-1){
 					printf("\nError: Too few arguments to function ‘%s’\n",$1);exit(0);
 				}
@@ -559,6 +585,15 @@ WRITE_STATEMENT : PRINTF LB Q_STRING {RWmode = 2; format_string($3);} RB{
 					printf("%s,%s);\n",temp_char,$6);
 				}
 				| PRINTF LB RB {printf("\");\n");}
+				| WRITE LB {RWmode = 2;} VAR_LIST_OP2 RB {
+					RWmode = 0;
+					if(strcmp($4.code2,"")==0){
+						printf("printf(\"%s\");\n",$4.code1);						
+					}
+					else{
+						printf("printf(\"%s\",%s);\n",$4.code1,$4.code2);	
+					}					
+				}
 PRINTF : PRINT {printf("printf(\"");} | PRINTLN {printf("printf(\"\\n");} 
 VAR_LIST_OP : A_EXPN COMA VAR_LIST_OP {
 				//printf("<A_EXPN COMA VAR_LIST_OP>");
@@ -588,7 +623,43 @@ VAR_LIST_OP : A_EXPN COMA VAR_LIST_OP {
 				}
 				strcpy($$,$1.code);		
 			}
+VAR_LIST_OP2 : Q_STRING COMA VAR_LIST_OP2 {
+				strcpy(temp_string,"");
+				unquote_string($1);
+				strcat(temp_string,$3.code1);
+				strcpy($$.code1,temp_string);
+				strcpy(temp_string,"");
+				strcpy($$.code2,$3.code2);
+			}
+			| A_EXPN COMA VAR_LIST_OP2{
+				strcpy(temp_string,"");
+				if($1.data_depth==1 && $1.type == 1){
+					strcpy(temp_string,"%s");
+				}
+				else{
+					strcpy(temp_string,format_spec[$1.type]);
+				}
+				strcat(temp_string,$3.code1);strcpy($$.code1,temp_string);strcpy(temp_string,"");
+				strcpy(temp_string2,$1.code);strcat(temp_string2,",");strcat(temp_string2,$3.code2);
+				strcpy($$.code2,temp_string2);strcpy(temp_string2,"");
 
+			}
+			| Q_STRING{
+				strcpy(temp_string,"");
+				unquote_string($1);
+				strcpy($$.code1,temp_string);
+				strcpy(temp_string,"");
+				strcpy($$.code2,"");
+			}
+			| A_EXPN{
+				if($1.data_depth==1 && $1.type == 1){
+					strcpy($$.code1,"%s");
+				}
+				else{
+					strcpy($$.code1,format_spec[$1.type]);
+				}
+				strcpy($$.code2,$1.code);
+			}
 READ_STATEMENT : SCANF LB Q_STRING {RWmode = 1; isScanf=1;format_string($3);} COMA VAR_LIST_IP RB{printf("scanf(%s,%s);\n",$3,$6.code1);RWmode = 0;}
 				| INPUT LB {RWmode=1;isScanf=0;} VAR_LIST_IP RB {printf("scanf(\"%s\",%s);\n",$4.code2,$4.code1);RWmode=0;}
 VAR_LIST_IP : A_EXPN COMA VAR_LIST_IP {
@@ -1257,6 +1328,16 @@ int string_len(char str[200]){
         len++;
     }
     return len;
+}
+void unquote_string(char str[100]){
+	strcpy(temp_string,"");
+    int i = 1;
+    while(str[i]!='\"'){
+        temp_string[i-1]=str[i];
+        i++;
+    }
+	temp_string[i-1]='\0';
+    i = 0;
 }
 void check_ind(int current_ind){
 	if(current_ind < pointer->ind_level){

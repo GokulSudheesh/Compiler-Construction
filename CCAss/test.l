@@ -31,6 +31,7 @@
 "return" {return RETURN;}
 "print" {return PRINT;}
 "println" {return PRINTLN;}
+"write" {return WRITE;}
 "input" {return INPUT;}
 "scanf" {return SCANF;}
 "#" {return HASH;}
