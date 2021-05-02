@@ -6,4 +6,5 @@ int @ main():
     set name as "Gokul"::string
     set char_array = ['h','i','i']::char
     set str_arr[30][20] :: char
+    write("\n",string_array[0])
     return 0
