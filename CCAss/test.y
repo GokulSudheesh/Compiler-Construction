@@ -690,7 +690,10 @@ VAR_LIST_OP2 : Q_STRING COMA VAR_LIST_OP2 {
 					strcpy(temp_string,format_spec[$1.type]);
 				}
 				strcat(temp_string,$3.code1);strcpy($$.code1,temp_string);strcpy(temp_string,"");
-				strcpy(temp_string2,$1.code);strcat(temp_string2,",");strcat(temp_string2,$3.code2);
+				strcpy(temp_string2,$1.code);
+				if(strcmp($3.code2,"")!=0){
+					strcat(temp_string2,",");strcat(temp_string2,$3.code2);
+				}
 				strcpy($$.code2,temp_string2);strcpy(temp_string2,"");
 
 			}
