@@ -839,7 +839,7 @@ ASSIGNMENT_STATEMENT : A_EXPN EQ A_EXPN
 						strcat(temp_string,$1.code);strcat(temp_string,")");strcpy($$,temp_string);
 						strcpy(temp_string,"");
 					}
-					if($1.data_depth==1 || $1.type==1){						
+					if($1.data_depth==1 && $1.type==1){						
 						strcpy(temp_string,"scanf(\"");strcat(temp_string,format_spec[4]);
 						strcat(temp_string,"\"");strcat(temp_string,",");
 						strcat(temp_string,$1.code);strcat(temp_string,")");strcpy($$,temp_string);
