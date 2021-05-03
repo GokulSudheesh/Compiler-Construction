@@ -14,7 +14,7 @@ int@main():
     for(set i=0::int,i<b,i++):
         break
         set var2,arr2[10],g2=1::int
-        print("%d",i)
+        write(i)
     loop(c<10):
         set lol1::float
         loop(b<11):
