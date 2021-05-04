@@ -40,7 +40,7 @@
 	struct structures{char struct_name[30];}struct_list[100];
 	int struct_count = -1; 
 	struct functions func_column;
-	int args;
+	int args=-1;
 
 	extern void push_table(int mode);//mode==1 -> prints "{\n" else nope
 	extern void pop_table();
@@ -186,8 +186,13 @@ FUNCTION_BODY : DATA_TYPE AT {printf("%s ",$1.code);} FUNC_DEPTH VAR {check_func
 				if(func_list[func_count].func_type.type != $8 && strcmp(func_list[func_count].func_name, "main") != 0){
 					yyerror("Syntax Error: Function has no return statement.");exit(0);
 				}
-				pop_table();
-				pointer = NULL;
+				while(pointer!=NULL){						
+					if(pointer->isGLobal){
+						break;
+					}
+					pop_table();
+				}		
+				//pointer = NULL;
 			}
 FUNC_DEPTH : MUL FUNC_DEPTH {$$.data_depth++;printf("*");} | MUL {$$.data_depth++;printf("*");} | /*Epsilon*/ {$$.data_depth=0;}
 
