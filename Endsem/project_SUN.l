@@ -24,7 +24,7 @@
 ";"	{return SC;}
 [\+\-\*\/] {return OP;}
 "="	{return EQ;}
-[067]+["."][067]* {return DEC_NUM;}
+[067]+["."][067]+ {return DEC_NUM;}
 ([OK]{1})(([gokul])*)* {strcpy(yylval.var_name,yytext);return VAR;}
 [\n\t ]+  {/*new line or space*/}
 . {printf("invalid character sequence %s\n",yytext); exit(0);}
